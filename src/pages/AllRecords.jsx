@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { isBeheerder } from '../utils/roles.js';
 import RecordCard from '../components/records/RecordCard.jsx';
 import Chip from '../components/ui/Chip.jsx';
+import ImportModal from '../components/ImportModal.jsx';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 const SORT_OPTIONS = [
@@ -34,7 +35,7 @@ function sortRecords(list, sortValue) {
         return db_ - da;
       });
     case 'price_desc':
-      return sorted.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+      return sorted.sort((a, b) => (parseFloat(b.purchasePrice) || 0) - (parseFloat(a.purchasePrice) || 0));
     case 'artist_asc':
     default:
       return sorted.sort((a, b) =>
@@ -48,6 +49,7 @@ export default function AllRecords() {
   const [searchParams] = useSearchParams();
   const { records, loading } = useRecords();
   const { role } = useAuth();
+  const [importOpen, setImportOpen] = useState(false);
 
   const urlSearch = searchParams.get('search') || '';
   const urlOwner = searchParams.get('owner') || '';
@@ -104,7 +106,7 @@ export default function AllRecords() {
 
   // Stats for filtered list
   const filteredValue = filtered.reduce(
-    (sum, r) => sum + (parseFloat(r.price) || 0),
+    (sum, r) => sum + (parseFloat(r.purchasePrice) || 0),
     0
   );
 
@@ -252,14 +254,22 @@ export default function AllRecords() {
           ))}
         </select>
 
-        {/* Add button (beheerder only) */}
+        {/* Add + Import buttons (beheerder only) */}
         {isBeheerder(role) && (
-          <button
-            style={buttonStyle('primary')}
-            onClick={() => navigate('/platen/nieuw')}
-          >
-            + Plaat toevoegen
-          </button>
+          <>
+            <button
+              style={buttonStyle('primary')}
+              onClick={() => navigate('/platen/nieuw')}
+            >
+              + Plaat toevoegen
+            </button>
+            <button
+              style={buttonStyle('secondary')}
+              onClick={() => setImportOpen(true)}
+            >
+              Importeer
+            </button>
+          </>
         )}
       </div>
 
@@ -282,6 +292,8 @@ export default function AllRecords() {
           ))}
         </div>
       )}
+
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

@@ -87,8 +87,10 @@ function computeGenres(records, ownerFilter) {
 
   const map = {};
   for (const r of filtered) {
-    const genre = r.genre || 'Onbekend';
-    map[genre] = (map[genre] || 0) + (Number(r.quantity) || 1);
+    const genres = Array.isArray(r.genres) ? r.genres : ['Onbekend'];
+    for (const genre of genres) {
+      map[genre] = (map[genre] || 0) + (Number(r.quantity) || 1);
+    }
   }
 
   return Object.entries(map)
