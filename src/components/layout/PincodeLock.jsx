@@ -10,6 +10,16 @@ const INACTIVITY_MS = 600000; // 10 minutes
 const MAX_ATTEMPTS = 5;
 const PIN_LENGTH = 4;
 
+async function hashPin(pin) {
+  const data = new TextEncoder().encode(pin + 'vinylvault-2025');
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isHashFormat(value) {
+  return /^[0-9a-f]{64}$/.test(value);
+}
+
 function PinInput({ value, onChange, onSubmit, label, disabled }) {
   const inputRef = useRef(null);
 
@@ -142,7 +152,9 @@ export default function PincodeLock() {
   // When overlay becomes active, determine phase based on stored pincode
   useEffect(() => {
     if (locked) {
-      const hasPincode = userDoc?.pincode != null && userDoc.pincode !== '';
+      const stored = userDoc?.pincode;
+      // Only treat as set if it's the new SHA-256 format (64 hex chars); old btoa pins force re-setup
+      const hasPincode = stored != null && stored !== '' && isHashFormat(stored);
       setPhase(hasPincode ? 'enter' : 'setup');
       setPin('');
       setPinConfirm('');
@@ -158,7 +170,7 @@ export default function PincodeLock() {
   async function handleEnterSubmit() {
     if (pin.length !== PIN_LENGTH) return;
     const stored = userDoc?.pincode;
-    if (btoa(pin) === stored) {
+    if (await hashPin(pin) === stored) {
       setLocked(false);
       setPin('');
       setAttempts(0);
@@ -196,7 +208,7 @@ export default function PincodeLock() {
     setBusy(true);
     try {
       const ref = doc(db, 'users', user.uid);
-      await updateDoc(ref, { pincode: btoa(pinConfirm) });
+      await updateDoc(ref, { pincode: await hashPin(pinConfirm) });
       setLocked(false);
       setPin('');
       setPinConfirm('');

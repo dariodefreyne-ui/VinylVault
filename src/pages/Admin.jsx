@@ -210,7 +210,7 @@ export default function Admin() {
       )}
 
       {/* Import modal */}
-      {importOpen && <ImportModal onClose={() => setImportOpen(false)} />}
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

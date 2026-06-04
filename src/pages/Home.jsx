@@ -1,37 +1,35 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecords } from '../hooks/useRecords.js';
+import { useWishlist } from '../hooks/useWishlist.js';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import RecordCard from '../components/records/RecordCard.jsx';
 import { colors, radius } from '../styles/tokens.js';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { records, loading, loadRecentRecords, kpis } = useRecords();
+  const { records, loading, kpis } = useRecords();
+  const { items: wishlistItems } = useWishlist();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [recentRecords, setRecentRecords] = useState([]);
-  const [recentLoading, setRecentLoading] = useState(true);
   const searchRef = useRef(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchRecent() {
-      setRecentLoading(true);
-      try {
-        const results = await loadRecentRecords(5);
-        if (!cancelled) setRecentRecords(results);
-      } catch (err) {
-        console.error('Home: failed to load recent records', err);
-      } finally {
-        if (!cancelled) setRecentLoading(false);
-      }
-    }
-    fetchRecent();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const recentRecords = useMemo(() =>
+    [...records]
+      .sort((a, b) => {
+        const da = a.dateAdded?.toDate?.() ?? new Date(a.dateAdded ?? 0);
+        const db_ = b.dateAdded?.toDate?.() ?? new Date(b.dateAdded ?? 0);
+        return db_ - da;
+      })
+      .slice(0, 5),
+    [records]
+  );
+
+  const activeWishlistCount = useMemo(
+    () => wishlistItems.filter((i) => i.status === 'actief').length,
+    [wishlistItems]
+  );
 
   // Top 10 artists by frequency from loaded records
   const artistSuggestions = (() => {
@@ -209,12 +207,18 @@ export default function Home() {
           color="orange"
           onClick={() => navigate('/platen?owner=papa')}
         />
+        <KpiTegel
+          label="Wishlist actief"
+          value={activeWishlistCount}
+          color="orange"
+          onClick={() => navigate('/wishlist')}
+        />
       </div>
 
       {/* Nieuw toegevoegd */}
       <div>
         <div style={sectionTitleStyle}>Nieuw toegevoegd</div>
-        {recentLoading ? (
+        {loading ? (
           <p style={emptyStyle}>Laden...</p>
         ) : recentRecords.length === 0 ? (
           <p style={emptyStyle}>Nog geen platen toegevoegd.</p>

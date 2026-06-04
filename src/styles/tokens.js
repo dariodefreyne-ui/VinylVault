@@ -32,6 +32,19 @@ export const C = {
   orangeDim: colors.orangeDim,
 };
 
+export const pageLayout = {
+  padding: '32px',
+  maxWidth: '1100px',
+  margin: '0 auto',
+};
+
+export const pageHeading = {
+  fontSize: '26px',
+  fontWeight: 700,
+  color: colors.textPrimary,
+  marginBottom: '28px',
+};
+
 export function badgeStyle(color) {
   const map = {
     red: { bg: C.redDim, text: C.red },

@@ -16,7 +16,7 @@ async function uploadFile(file, path) {
 
 export default function RecordAdd() {
   const navigate = useNavigate();
-  const { addRecord } = useRecords();
+  const { addRecord, updateRecord } = useRecords();
   const showToast = useToast();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -39,30 +39,34 @@ export default function RecordAdd() {
 
     setLoading(true);
     try {
-      let coverImageUrl = null;
-      if (coverFile) {
-        const filename = `${Date.now()}_${coverFile.name}`;
-        coverImageUrl = await uploadFile(coverFile, `records/temp/${filename}`);
-      }
-
-      const userPhotos = [];
-      if (extraFiles && extraFiles.length > 0) {
-        for (const file of extraFiles) {
-          const filename = `${Date.now()}_${file.name}`;
-          const url = await uploadFile(file, `records/temp/${filename}`);
-          userPhotos.push(url);
-        }
-      }
-
       const newId = await addRecord({
         ...rest,
         artist: artist.trim(),
         title: title.trim(),
         owner,
-        coverImageUrl,
-        userPhotos,
+        coverImageUrl: null,
+        userPhotos: [],
         addedBy: user ? user.uid : null,
       });
+
+      const updates = {};
+
+      if (coverFile) {
+        updates.coverImageUrl = await uploadFile(coverFile, `records/${newId}/cover_${Date.now()}.jpg`);
+      }
+
+      const userPhotos = [];
+      if (extraFiles && extraFiles.length > 0) {
+        for (let i = 0; i < extraFiles.length; i++) {
+          const url = await uploadFile(extraFiles[i], `records/${newId}/photo_${Date.now()}_${i}.jpg`);
+          userPhotos.push(url);
+        }
+        updates.userPhotos = userPhotos;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await updateRecord(newId, updates);
+      }
 
       showToast('Plaat toegevoegd!', 'success');
       navigate(`/platen/${newId}`);

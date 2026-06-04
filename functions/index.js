@@ -1,6 +1,8 @@
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 
 initializeApp();
 
@@ -11,8 +13,11 @@ exports.notifyAdminOnNewUser = onDocumentCreated('users/{uid}', async (event) =>
   const name = data.displayName || 'Onbekend';
   const email = data.email || 'Geen e-mail';
 
+  const configDoc = await db.collection('config').doc('app').get();
+  const adminEmail = configDoc.data()?.adminEmail || 'dario.de.freyne@gmail.com';
+
   await db.collection('mail').add({
-    to: 'dario.de.freyne@gmail.com',
+    to: adminEmail,
     message: {
       subject: 'VinylVault — Nieuwe gebruiker wacht op activatie',
       html: `
@@ -23,4 +28,16 @@ exports.notifyAdminOnNewUser = onDocumentCreated('users/{uid}', async (event) =>
       `,
     },
   });
+});
+
+exports.deleteAuthUser = onCall(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError('unauthenticated', 'Niet geauthenticeerd');
+
+  const db = getFirestore();
+  const callerDoc = await db.collection('users').doc(callerUid).get();
+  if (callerDoc.data()?.role !== 'admin') throw new HttpsError('permission-denied', 'Geen toegang');
+
+  await getAuth().deleteUser(request.data.uid);
+  return { success: true };
 });

@@ -6,6 +6,7 @@ import {
   deleteDoc,
   doc,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase/config.js';
 import { useAuth } from './useAuth.jsx';
 
@@ -67,6 +68,14 @@ export function useAdmin() {
     const ref = doc(db, 'users', uid);
     await deleteDoc(ref);
     setUsers((prev) => prev.filter((u) => u.id !== uid));
+
+    try {
+      const functions = getFunctions();
+      const deleteAuthUserFn = httpsCallable(functions, 'deleteAuthUser');
+      await deleteAuthUserFn({ uid });
+    } catch (err) {
+      console.error('useAdmin: failed to delete Firebase Auth account', err);
+    }
   }
 
   return { users, loading, updateUserRole, deleteUser };

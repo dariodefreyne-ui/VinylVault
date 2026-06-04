@@ -101,15 +101,13 @@ export default function RecordDetail() {
     try {
       let coverImageUrl = record.coverImageUrl || null;
       if (coverFile) {
-        const filename = `${Date.now()}_${coverFile.name}`;
-        coverImageUrl = await uploadFile(coverFile, `records/temp/${filename}`);
+        coverImageUrl = await uploadFile(coverFile, `records/${id}/cover_${Date.now()}.jpg`);
       }
 
       const userPhotos = record.userPhotos || [];
       if (extraFiles && extraFiles.length > 0) {
         for (const file of extraFiles) {
-          const filename = `${Date.now()}_${file.name}`;
-          const url = await uploadFile(file, `records/temp/${filename}`);
+          const url = await uploadFile(file, `records/${id}/photo_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`);
           userPhotos.push(url);
         }
       }
@@ -263,14 +261,14 @@ export default function RecordDetail() {
   const sublineParts = [
     record.year,
     record.format,
-    record.price != null ? `€${parseFloat(record.price).toFixed(2)}` : null,
+    record.purchasePrice != null ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null,
   ].filter(Boolean);
 
   const formInitialData = {
     artist: record.artist || '',
     title: record.title || '',
     owner: record.owner || 'Dario',
-    price: record.price != null ? record.price : '',
+    purchasePrice: record.purchasePrice != null ? record.purchasePrice : '',
     quantity: record.quantity != null ? record.quantity : 1,
     purchaseDate: record.purchaseDate || '',
     label: record.label || '',
@@ -334,13 +332,13 @@ export default function RecordDetail() {
 
       {/* Tabs */}
       <div style={tabBarStyle}>
-        {['info', 'fotos', 'notities'].map((tab) => (
+        {['info', 'tracklist', 'fotos', 'notities'].map((tab) => (
           <button
             key={tab}
             style={chipStyle(activeTab === tab)}
             onClick={() => setActiveTab(tab)}
           >
-            {tab === 'info' ? 'Info' : tab === 'fotos' ? "Foto's" : 'Notities'}
+            {tab === 'info' ? 'Info' : tab === 'tracklist' ? 'Tracklist' : tab === 'fotos' ? "Foto's" : 'Notities'}
           </button>
         ))}
       </div>
@@ -355,7 +353,7 @@ export default function RecordDetail() {
           <InfoRow label="Jaar" value={record.year} />
           <InfoRow label="Format" value={record.format} />
           <InfoRow label="Conditie" value={record.condition} />
-          <InfoRow label="Aankoopprijs" value={record.price != null ? `€${parseFloat(record.price).toFixed(2)}` : null} />
+          <InfoRow label="Aankoopprijs" value={record.purchasePrice != null ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
           <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
           <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
           {record.genres && record.genres.length > 0 && (
@@ -382,6 +380,23 @@ export default function RecordDetail() {
                 ))}
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Tracklist */}
+      {activeTab === 'tracklist' && (
+        <div>
+          {record.tracklist && record.tracklist.length > 0 ? (
+            <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {record.tracklist.map((track, i) => (
+                <li key={i} style={{ fontSize: '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
+                  {track}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen tracklist beschikbaar.</p>
           )}
         </div>
       )}

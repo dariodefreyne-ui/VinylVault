@@ -1,4 +1,4 @@
-name: Deploy VinylVault to Firebase Hosting
+name: Deploy VinylVault to Firebase
 
 on:
   push:
@@ -19,8 +19,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
+
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
 
       - name: Write env file
         env:
@@ -32,13 +35,17 @@ jobs:
           fi
           printf '%s' "$ENV_FILE" > .env.local
 
-      - name: Build
+      - name: Build frontend
         run: npm run build
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: vinylvault-7b7f5
+      - name: Deploy to Firebase (Hosting + Firestore Rules + Storage Rules + Functions)
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > /tmp/firebase-sa.json
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-sa.json \
+            npx --yes firebase-tools deploy \
+            --only hosting,firestore:rules,storage:rules,functions \
+            --project vinylvault-7b7f5 \
+            --non-interactive
+          rm -f /tmp/firebase-sa.json
