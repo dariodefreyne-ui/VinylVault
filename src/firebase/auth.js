@@ -14,13 +14,18 @@ export function loginWithEmail(email, password) {
 
 export async function registerUser(email, password, displayName) {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
-  const uid = credential.user.uid;
-  await setDoc(doc(db, 'users', uid), {
-    email,
-    displayName,
-    role: 'pending',
-    createdAt: serverTimestamp(),
-  });
+  try {
+    await setDoc(doc(db, 'users', credential.user.uid), {
+      email,
+      displayName,
+      role: 'pending',
+      createdAt: serverTimestamp(),
+    });
+  } catch (firestoreErr) {
+    // Firestore schrijven mislukt — verwijder Auth account zodat gebruiker opnieuw kan proberen
+    try { await credential.user.delete(); } catch (_) {}
+    throw firestoreErr;
+  }
   return credential;
 }
 

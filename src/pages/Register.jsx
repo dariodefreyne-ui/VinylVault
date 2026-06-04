@@ -30,6 +30,8 @@ export default function Register() {
     } catch (err) {
       const msg = err.code === 'auth/email-already-in-use'
         ? 'Dit e-mailadres is al in gebruik.'
+        : err.code === 'permission-denied'
+        ? 'Database-regels niet gepubliceerd. Ga naar Firebase Console → Firestore → Rules en klik Publish.'
         : err.message || 'Registratie mislukt.';
       showToast(msg, 'error');
     } finally {

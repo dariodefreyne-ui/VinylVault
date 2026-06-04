@@ -23,18 +23,28 @@ export function AuthProvider({ children }) {
             setUserDoc(data);
             setRole(data.role || null);
           } else {
-            // Gebruiker aangemaakt via Firebase Console zonder app-registratie
+            // Doc bestaat niet — maak aan (bv. gebruiker aangemaakt via Firebase Console)
             const newData = {
               email: firebaseUser.email,
               displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
               role: 'pending',
               createdAt: serverTimestamp(),
             };
-            await setDoc(ref, newData);
-            setUserDoc(newData);
-            setRole('pending');
+            try {
+              await setDoc(ref, newData);
+              setUserDoc(newData);
+              setRole('pending');
+            } catch {
+              // Firestore rules blokkeren schrijven — stel role in als null
+              setUserDoc(null);
+              setRole(null);
+            }
           }
-        } catch {
+        } catch (err) {
+          // getDoc zelf faalde (bv. rules nog niet gepubliceerd)
+          if (err.code === 'permission-denied') {
+            console.error('Firestore rules zijn nog niet gepubliceerd in Firebase Console.');
+          }
           setUserDoc(null);
           setRole(null);
         }
