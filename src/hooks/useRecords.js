@@ -8,11 +8,12 @@ import {
   doc,
   query,
   orderBy,
-  limit,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import { useAuth } from './useAuth.jsx';
+
+let cachedRecords = null;
 
 function generateSearchKeywords(artist, title) {
   const text = ((artist || '') + ' ' + (title || '')).toLowerCase();
@@ -26,7 +27,7 @@ function computeKpis(records) {
   let papaCount = 0;
 
   for (const r of records) {
-    if (r.price) totalValue += parseFloat(r.price) || 0;
+    if (r.purchasePrice) totalValue += parseFloat(r.purchasePrice) || 0;
     const owner = (r.owner || '').toLowerCase();
     if (owner === 'dario') darioCount += 1;
     else if (owner === 'papa') papaCount += 1;
@@ -42,14 +43,15 @@ function computeKpis(records) {
 
 export function useRecords() {
   const { user } = useAuth();
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState(cachedRecords || []);
+  const [loading, setLoading] = useState(cachedRecords === null);
 
   useEffect(() => {
+    if (cachedRecords !== null) return;
+
     let cancelled = false;
 
     async function loadAll() {
-      setLoading(true);
       try {
         const q = query(
           collection(db, 'records'),
@@ -57,11 +59,13 @@ export function useRecords() {
         );
         const snap = await getDocs(q);
         if (!cancelled) {
-          setRecords(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+          const loaded = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          cachedRecords = loaded;
+          setRecords(loaded);
+          setLoading(false);
         }
       } catch (err) {
         console.error('useRecords: failed to load records', err);
-      } finally {
         if (!cancelled) setLoading(false);
       }
     }
@@ -71,16 +75,6 @@ export function useRecords() {
       cancelled = true;
     };
   }, []);
-
-  async function loadRecentRecords(n) {
-    const q = query(
-      collection(db, 'records'),
-      orderBy('dateAdded', 'desc'),
-      limit(n)
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  }
 
   async function addRecord(data) {
     const keywords = generateSearchKeywords(data.artist, data.title);
@@ -94,26 +88,28 @@ export function useRecords() {
     };
     const ref = await addDoc(collection(db, 'records'), payload);
     const newRecord = { id: ref.id, ...payload, dateAdded: new Date() };
-    setRecords((prev) =>
-      [...prev, newRecord].sort((a, b) =>
-        (a.artistSort || '').localeCompare(b.artistSort || '')
-      )
+    const next = [...(cachedRecords || []), newRecord].sort((a, b) =>
+      (a.artistSort || '').localeCompare(b.artistSort || '')
     );
+    cachedRecords = next;
+    setRecords(next);
     return ref.id;
   }
 
   async function updateRecord(id, data) {
     const ref = doc(db, 'records', id);
     await updateDoc(ref, data);
-    setRecords((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, ...data } : r))
-    );
+    const next = (cachedRecords || []).map((r) => (r.id === id ? { ...r, ...data } : r));
+    cachedRecords = next;
+    setRecords(next);
   }
 
   async function deleteRecord(id) {
     const ref = doc(db, 'records', id);
     await deleteDoc(ref);
-    setRecords((prev) => prev.filter((r) => r.id !== id));
+    const next = (cachedRecords || []).filter((r) => r.id !== id);
+    cachedRecords = next;
+    setRecords(next);
   }
 
   const kpis = computeKpis(records);
@@ -121,7 +117,6 @@ export function useRecords() {
   return {
     records,
     loading,
-    loadRecentRecords,
     addRecord,
     updateRecord,
     deleteRecord,

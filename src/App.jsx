@@ -17,31 +17,14 @@ import Admin from './pages/Admin.jsx';
 
 // --- Route guards ---
 
-// AUTH_DISABLED: tijdelijk uitgeschakeld voor testing
-const AUTH_DISABLED = true;
-
-function ProtectedRoute({ children }) {
-  if (AUTH_DISABLED) {
-    return (
-      <Layout>
-        {children}
-      </Layout>
-    );
-  }
-
+function ProtectedRoute({ children, requireBeheerder, requireAdmin }) {
   const { user, role, loading } = useAuth();
 
-  if (loading) {
-    return <div style={{ minHeight: '100vh', backgroundColor: '#0f0f0f' }} />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!isActivated(role)) {
-    return <Navigate to="/pending" replace />;
-  }
+  if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#0f0f0f' }} />;
+  if (!user) return <Navigate to='/login' replace />;
+  if (!isActivated(role)) return <Navigate to='/pending' replace />;
+  if (requireAdmin && !isAdmin(role)) return <Navigate to='/' replace />;
+  if (requireBeheerder && !isBeheerder(role)) return <Navigate to='/' replace />;
 
   return (
     <Layout>
