@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useRecords } from '../hooks/useRecords.js';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import RecordCard from '../components/records/RecordCard.jsx';
-import Layout from '../components/layout/Layout.jsx';
 import { colors, radius } from '../styles/tokens.js';
 
 export default function Home() {
@@ -148,88 +147,86 @@ export default function Home() {
   };
 
   return (
-    <Layout>
-      <div style={pageStyle}>
-        {/* Page header */}
-        <h1 style={headingStyle}>Mijn Platencollectie</h1>
-        <p style={subtitleStyle}>
-          {loading ? '…' : kpis.totalRecords} platen in de collectie
-        </p>
+    <div style={pageStyle}>
+      {/* Page header */}
+      <h1 style={headingStyle}>Mijn Platencollectie</h1>
+      <p style={subtitleStyle}>
+        {loading ? '…' : kpis.totalRecords} platen in de collectie
+      </p>
 
-        {/* Search bar */}
-        <div style={searchWrapStyle}>
-          <div style={searchInnerStyle}>
-            <span style={{ fontSize: '18px', color: colors.textSecondary }}>🔍</span>
-            <input
-              ref={searchRef}
-              style={searchInputStyle}
-              type="text"
-              placeholder="Zoek op artiest of titel..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-            />
+      {/* Search bar */}
+      <div style={searchWrapStyle}>
+        <div style={searchInnerStyle}>
+          <span style={{ fontSize: '18px', color: colors.textSecondary }}>🔍</span>
+          <input
+            ref={searchRef}
+            style={searchInputStyle}
+            type="text"
+            placeholder="Zoek op artiest of titel..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+          />
+        </div>
+
+        {showSuggestions && (
+          <div style={dropdownStyle}>
+            {artistSuggestions.map((artist) => (
+              <SuggestionItem
+                key={artist}
+                label={artist}
+                baseStyle={suggestionItemStyle}
+                onClick={() => handleSuggestionClick(artist)}
+              />
+            ))}
           </div>
-
-          {showSuggestions && (
-            <div style={dropdownStyle}>
-              {artistSuggestions.map((artist) => (
-                <SuggestionItem
-                  key={artist}
-                  label={artist}
-                  baseStyle={suggestionItemStyle}
-                  onClick={() => handleSuggestionClick(artist)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* KPI strip */}
-        <div style={kpiRowStyle}>
-          <KpiTegel
-            label="Totaal platen"
-            value={kpis.totalRecords}
-            onClick={() => navigate('/platen')}
-          />
-          <KpiTegel
-            label="Totale waarde"
-            value={'€' + kpis.totalValue.toFixed(2)}
-            color="green"
-          />
-          <KpiTegel
-            label="Dario"
-            value={kpis.darioCount}
-            color="blue"
-            onClick={() => navigate('/platen?owner=dario')}
-          />
-          <KpiTegel
-            label="Papa"
-            value={kpis.papaCount}
-            color="orange"
-            onClick={() => navigate('/platen?owner=papa')}
-          />
-        </div>
-
-        {/* Nieuw toegevoegd */}
-        <div>
-          <div style={sectionTitleStyle}>Nieuw toegevoegd</div>
-          {recentLoading ? (
-            <p style={emptyStyle}>Laden...</p>
-          ) : recentRecords.length === 0 ? (
-            <p style={emptyStyle}>Nog geen platen toegevoegd.</p>
-          ) : (
-            <div style={gridStyle}>
-              {recentRecords.map((record) => (
-                <RecordCard key={record.id} record={record} />
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    </Layout>
+
+      {/* KPI strip */}
+      <div style={kpiRowStyle}>
+        <KpiTegel
+          label="Totaal platen"
+          value={kpis.totalRecords}
+          onClick={() => navigate('/platen')}
+        />
+        <KpiTegel
+          label="Totale waarde"
+          value={'€' + kpis.totalValue.toFixed(2)}
+          color="green"
+        />
+        <KpiTegel
+          label="Dario"
+          value={kpis.darioCount}
+          color="blue"
+          onClick={() => navigate('/platen?owner=dario')}
+        />
+        <KpiTegel
+          label="Papa"
+          value={kpis.papaCount}
+          color="orange"
+          onClick={() => navigate('/platen?owner=papa')}
+        />
+      </div>
+
+      {/* Nieuw toegevoegd */}
+      <div>
+        <div style={sectionTitleStyle}>Nieuw toegevoegd</div>
+        {recentLoading ? (
+          <p style={emptyStyle}>Laden...</p>
+        ) : recentRecords.length === 0 ? (
+          <p style={emptyStyle}>Nog geen platen toegevoegd.</p>
+        ) : (
+          <div style={gridStyle}>
+            {recentRecords.map((record) => (
+              <RecordCard key={record.id} record={record} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

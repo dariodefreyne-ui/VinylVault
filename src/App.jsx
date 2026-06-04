@@ -7,24 +7,12 @@ import PincodeLock from './components/layout/PincodeLock.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Pending from './pages/Pending.jsx';
+import Home from './pages/Home.jsx';
+import AllRecords from './pages/AllRecords.jsx';
+import RecordAdd from './pages/RecordAdd.jsx';
+import RecordDetail from './pages/RecordDetail.jsx';
 
 // --- Placeholder pages ---
-
-function HomePlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Home</div>;
-}
-
-function AllRecordsPlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Alle Platen</div>;
-}
-
-function NewRecordPlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Nieuw Plaat</div>;
-}
-
-function RecordDetailPlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Plaat Detail</div>;
-}
 
 function WishlistPlaceholder() {
   return <div style={{ padding: '32px', color: '#f0f0f0' }}>Wishlist</div>;
@@ -112,7 +100,7 @@ const router = createBrowserRouter([
     path: '/',
     element: (
       <ProtectedRoute>
-        <HomePlaceholder />
+        <Home />
       </ProtectedRoute>
     ),
   },
@@ -120,7 +108,7 @@ const router = createBrowserRouter([
     path: '/platen',
     element: (
       <ProtectedRoute>
-        <AllRecordsPlaceholder />
+        <AllRecords />
       </ProtectedRoute>
     ),
   },
@@ -128,7 +116,7 @@ const router = createBrowserRouter([
     path: '/platen/nieuw',
     element: (
       <ProtectedRoute requireBeheerder>
-        <NewRecordPlaceholder />
+        <RecordAdd />
       </ProtectedRoute>
     ),
   },
@@ -136,7 +124,7 @@ const router = createBrowserRouter([
     path: '/platen/:id',
     element: (
       <ProtectedRoute>
-        <RecordDetailPlaceholder />
+        <RecordDetail />
       </ProtectedRoute>
     ),
   },
