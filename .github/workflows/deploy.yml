@@ -23,7 +23,14 @@ jobs:
         run: npm ci
 
       - name: Write env file
-        run: echo "${{ secrets.ENV_FILE }}" > .env.local
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          if [ -z "$ENV_FILE" ]; then
+            echo "ERROR: ENV_FILE secret is niet ingesteld in GitHub Secrets"
+            exit 1
+          fi
+          printf '%s' "$ENV_FILE" > .env.local
 
       - name: Build
         run: npm run build
