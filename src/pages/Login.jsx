@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginWithEmail } from '../firebase/auth.js';
-import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from '../components/ui/Toast.jsx';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config.js';
 import { isActivated } from '../utils/roles.js';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
@@ -11,18 +12,21 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { role } = useAuth();
   const showToast = useToast();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await loginWithEmail(email, password);
-      // role will update via onAuthChange; read fresh role from Firestore via redirect logic
-      // We navigate based on current role after login — useAuth will refresh automatically
-      // Use a small delay to let the auth state settle, but we rely on the router guards
-      navigate('/');
+      const credential = await loginWithEmail(email, password);
+      const uid = credential.user.uid;
+      const snap = await getDoc(doc(db, 'users', uid));
+      const role = snap.exists() ? snap.data().role || null : null;
+      if (!isActivated(role)) {
+        navigate('/pending');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       const msg = err.code === 'auth/invalid-credential'
         ? 'Ongeldig e-mailadres of wachtwoord.'
