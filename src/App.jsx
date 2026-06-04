@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
 import { isActivated, isAdmin, isBeheerder } from './utils/roles.js';
+import Layout from './components/layout/Layout.jsx';
+import PincodeLock from './components/layout/PincodeLock.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Pending from './pages/Pending.jsx';
@@ -61,7 +63,12 @@ function ProtectedRoute({ children, requireBeheerder = false, requireAdmin = fal
     return <Navigate to="/" replace />;
   }
 
-  return children;
+  return (
+    <Layout>
+      <PincodeLock />
+      {children}
+    </Layout>
+  );
 }
 
 function PendingRoute({ children }) {
