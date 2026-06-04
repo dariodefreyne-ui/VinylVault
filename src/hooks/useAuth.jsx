@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import { onAuthChange } from '../firebase/auth.js';
 
@@ -23,8 +23,16 @@ export function AuthProvider({ children }) {
             setUserDoc(data);
             setRole(data.role || null);
           } else {
-            setUserDoc(null);
-            setRole(null);
+            // Gebruiker aangemaakt via Firebase Console zonder app-registratie
+            const newData = {
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+              role: 'pending',
+              createdAt: serverTimestamp(),
+            };
+            await setDoc(ref, newData);
+            setUserDoc(newData);
+            setRole('pending');
           }
         } catch {
           setUserDoc(null);

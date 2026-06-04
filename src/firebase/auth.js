@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config.js';
@@ -29,4 +30,8 @@ export function logout() {
 
 export function onAuthChange(callback) {
   return onAuthStateChanged(auth, callback);
+}
+
+export function resetPassword(email) {
+  return sendPasswordResetEmail(auth, email);
 }

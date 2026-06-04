@@ -3,12 +3,14 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function userRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
     }
     function isSignedIn() { return request.auth != null; }
     function isAdmin() { return isSignedIn() && userRole() == 'admin'; }
     function isBeheerder() { return isSignedIn() && (userRole() == 'beheerder' || isAdmin()); }
-    function isActivated() { return isSignedIn() && userRole() != 'pending'; }
+    function isActivated() { return isSignedIn() && userRole() != null && userRole() != 'pending'; }
 
     match /users/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
