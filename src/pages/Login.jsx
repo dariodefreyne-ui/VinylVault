@@ -45,13 +45,11 @@ export default function Login() {
     setResetSending(true);
     try {
       await resetPassword(resetEmail);
-      showToast('Reset-link verstuurd! Controleer je inbox.', 'success');
+      showToast('Als dit e-mailadres bekend is, ontvang je een reset-link.', 'success');
       setForgotMode(false);
       setResetEmail('');
     } catch (err) {
-      const msg = err.code === 'auth/user-not-found'
-        ? 'Geen account gevonden met dit e-mailadres.'
-        : err.message || 'Versturen mislukt.';
+      const msg = err.message || 'Versturen mislukt.';
       showToast(msg, 'error');
     } finally {
       setResetSending(false);
