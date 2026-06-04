@@ -6,7 +6,8 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
-import { parseExcelFile, sanitizeRow, autoDetectMapping, COLUMN_MAPPINGS } from '../utils/importExcel.js';
+import { parseExcelFile, sanitizeRow, autoDetectMapping, exportToExcel, COLUMN_MAPPINGS } from '../utils/importExcel.js';
+import { invalidateRecordsCache } from '../hooks/useRecords.js';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from './ui/Toast.jsx';
 import DetailModal from './ui/DetailModal.jsx';
@@ -501,10 +502,12 @@ function StepImporting({ sanitizedRows, skipErrors, user, onDone, onError }) {
           const titleText = record.title || '';
           const text = (artistText + ' ' + titleText).toLowerCase();
           const searchKeywords = [...new Set(text.split(/\s+/).filter((w) => w.length > 0))];
+          const artistSort = artistText.toLowerCase().replace(/^the\s+/i, '');
 
           const ref = doc(collection(db, 'records'));
           batch.set(ref, {
             ...record,
+            artistSort,
             searchKeywords,
             dateAdded: serverTimestamp(),
             addedBy: user ? user.uid : null,
@@ -613,6 +616,7 @@ export default function ImportModal({ open, onClose }) {
   }
 
   function handleImportDone() {
+    invalidateRecordsCache();
     showToast('Import voltooid!', 'success');
     handleClose();
   }

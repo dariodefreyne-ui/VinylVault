@@ -13,7 +13,7 @@ export default function RecordCard({ record }) {
     year,
     format,
     label: recordLabel,
-    price,
+    purchasePrice,
     condition,
     genres,
     coverImageUrl,
@@ -156,8 +156,8 @@ export default function RecordCard({ record }) {
 
       {/* Bottom row: price + condition + genre chips */}
       <div style={bottomRowStyle}>
-        {price != null && price !== '' ? (
-          <span style={priceStyle}>€ {parseFloat(price).toFixed(2)}</span>
+        {purchasePrice != null && purchasePrice !== '' ? (
+          <span style={priceStyle}>€ {parseFloat(purchasePrice).toFixed(2)}</span>
         ) : (
           <span style={{ ...priceStyle, color: colors.textSecondary, fontWeight: 400 }}>
             —
