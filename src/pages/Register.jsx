@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../firebase/auth.js';
 import { useToast } from '../components/ui/Toast.jsx';
@@ -10,11 +10,14 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const inFlight = useRef(false);
   const navigate = useNavigate();
   const showToast = useToast();
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (inFlight.current) return;
+
     if (password !== confirmPassword) {
       showToast('Wachtwoorden komen niet overeen.', 'error');
       return;
@@ -23,18 +26,22 @@ export default function Register() {
       showToast('Wachtwoord moet minstens 6 tekens bevatten.', 'error');
       return;
     }
+
+    inFlight.current = true;
     setSubmitting(true);
     try {
       await registerUser(email, password, displayName);
       navigate('/pending');
     } catch (err) {
+      console.error('Register error:', err.code, err.message);
       const msg = err.code === 'auth/email-already-in-use'
-        ? 'Dit e-mailadres is al in gebruik.'
+        ? 'Dit e-mailadres is al in gebruik. Probeer in te loggen of gebruik wachtwoord vergeten.'
         : err.code === 'permission-denied'
         ? 'Database-regels niet gepubliceerd. Ga naar Firebase Console → Firestore → Rules en klik Publish.'
-        : err.message || 'Registratie mislukt.';
+        : `Registratie mislukt (${err.code || 'onbekend'}): ${err.message}`;
       showToast(msg, 'error');
     } finally {
+      inFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -81,19 +88,6 @@ export default function Register() {
     boxSizing: 'border-box',
   };
 
-  const headingStyle = {
-    fontSize: '22px',
-    fontWeight: 700,
-    color: colors.textPrimary,
-    margin: 0,
-  };
-
-  const subStyle = {
-    fontSize: '13px',
-    color: colors.textSecondary,
-    margin: 0,
-  };
-
   const linkStyle = {
     color: colors.accentRed,
     textDecoration: 'none',
@@ -104,8 +98,12 @@ export default function Register() {
     <div style={pageStyle}>
       <div style={cardStyle}>
         <div>
-          <h1 style={headingStyle}>Registreren</h1>
-          <p style={subStyle}>Maak een account aan voor VinylVault</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+            Registreren
+          </h1>
+          <p style={{ fontSize: '13px', color: colors.textSecondary, margin: '6px 0 0' }}>
+            Maak een account aan voor VinylVault
+          </p>
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <label style={labelStyle}>
