@@ -11,20 +11,9 @@ import Home from './pages/Home.jsx';
 import AllRecords from './pages/AllRecords.jsx';
 import RecordAdd from './pages/RecordAdd.jsx';
 import RecordDetail from './pages/RecordDetail.jsx';
-
-// --- Placeholder pages ---
-
-function WishlistPlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Wishlist</div>;
-}
-
-function StatisticsPlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Statistieken</div>;
-}
-
-function AdminPlaceholder() {
-  return <div style={{ padding: '32px', color: '#f0f0f0' }}>Admin</div>;
-}
+import Wishlist from './pages/Wishlist.jsx';
+import Statistics from './pages/Statistics.jsx';
+import Admin from './pages/Admin.jsx';
 
 // --- Route guards ---
 
@@ -132,7 +121,7 @@ const router = createBrowserRouter([
     path: '/wishlist',
     element: (
       <ProtectedRoute>
-        <WishlistPlaceholder />
+        <Wishlist />
       </ProtectedRoute>
     ),
   },
@@ -140,7 +129,7 @@ const router = createBrowserRouter([
     path: '/statistieken',
     element: (
       <ProtectedRoute>
-        <StatisticsPlaceholder />
+        <Statistics />
       </ProtectedRoute>
     ),
   },
@@ -148,7 +137,7 @@ const router = createBrowserRouter([
     path: '/admin',
     element: (
       <ProtectedRoute requireAdmin>
-        <AdminPlaceholder />
+        <Admin />
       </ProtectedRoute>
     ),
   },
