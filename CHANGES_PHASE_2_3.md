@@ -2,10 +2,11 @@
 
 **Branch:** `claude/phase-2-3-continuation-gDrzS`
 **Datum:** juni 2026
-**Status:** alles gebouwd (groen) en gepusht — nog **niet** gedeployed naar productie.
+**Status:** gemerged naar `main` en gedeployd (Phase 2/3 + redesign + ronde 2-verfijningen
+behalve de allerlaatste statistieken/tracklist-PR).
 
 Dit document beschrijft de volledige stand van zaken na de doorontwikkeling bovenop
-Phase 1. Het gaat om **14 commits**, **45 bestanden gewijzigd**, ~2.240 regels toegevoegd.
+Phase 1, inclusief de verfijningsronde (zie §13).
 
 ---
 
@@ -41,7 +42,13 @@ Phase 1. Het gaat om **14 commits**, **45 bestanden gewijzigd**, ~2.240 regels t
 | Installeerbaar als app + schermvullend (geen adresbalk) | ✅ klaar |
 | Offline openen + snel herladen (service worker) | ✅ klaar |
 | Snellere eerste lading (code-splitting) | ✅ klaar |
-| Bulk metadata aanvullen voor hele collectie | ❌ nog niet (optioneel later) |
+| Bulk metadata aanvullen voor hele collectie | ✅ klaar (§13) |
+| Node 22 runtime + nieuwste functions-deps | ✅ klaar (§13) |
+| Import: barcode/catalogusnummer + heropladen zonder duplicaten | ✅ klaar (§13) |
+| Bezoekers-/kioskmodus (touch & swipe) | ✅ klaar (§13) |
+| Tracklist automatisch aanvullen | ✅ klaar (§13) |
+| Statistieken: totale waarde + aankoopwaarde | ✅ klaar (§13) |
+| PWA-icoon (zichtbaar) | ✅ klaar (§13) |
 
 ---
 
@@ -242,8 +249,6 @@ collectionGrants/{id}                  (NIEUW)
   leesbaar voor élke geactiveerde gebruiker (bestaande regel `read: if isActivated()`). De
   privé/grant-logica wordt in de UI afgedwongen — passend voor een kleine familie-app. Echte
   DB-afdwinging vergt een herstructurering van de records-leesregels (op `ownerUid`).
-- **Geen bulk-metadata** voor de hele collectie in één keer (per plaat werkt het wel). Een
-  batch-functie met rate-limiting + review is een logische volgende stap.
 - **Bundel ~693 KB** initieel (grotendeels Firebase, app-breed nodig).
 - **iOS Safari** scant prima via ZXing, maar moet wel via HTTPS draaien en cameratoestemming krijgen.
 
@@ -267,3 +272,61 @@ a5be64e  Phase 2E: profielpagina met collectie-zichtbaarheid en browse-permissie
 75bf79c  Phase 2D: persoonlijke Home met eigen collectie + toggle
 bdba77f  Phase 2C: owner-architectuur met ownerUid en collectionLabel
 ```
+
+---
+
+## 13. Verfijningsronde (na eerste deploy)
+
+Reeks aanpassingen op basis van gebruik in productie.
+
+### Layout & PWA
+- **Login/publieke pagina's** centreren correct (was links uitgelijnd); `100dvh` +
+  `overflow-x: hidden` tegen "iets te groot" en doorscrollen op iPhone.
+- **Mobiel menu** sluit nu zodra je op een nav-item klikt.
+- **App-icoon** opnieuw ontworpen: donkere plaat op een **warm amber-veld** met licht
+  label → goed zichtbaar op een donker beginscherm (was donker-op-donker).
+
+### Platform
+- **Node 22** runtime voor de Cloud Functions; `firebase-functions` 5→7.2.5,
+  `firebase-admin` 12→13.10.0. CI op `setup-node@22`. Deploy met `--force` (cleanup policy).
+- **Discogs-token via CI**: optioneel GitHub-secret `DISCOGS_TOKEN` → automatisch naar
+  `functions/.env` bij deploy.
+
+### Import (Excel)
+- Veel bredere kolomherkenning: barcode/ean/upc/streepjescode, **catalogusnummer**,
+  land, conditie, uitgavejaar, en `username`→eigenaar. Barcode/catalogusnummer zichtbaar
+  in de preview.
+- **Heropladen zonder duplicaten of verlies:** bestaande lp's worden herkend (op barcode
+  **of** artiest+titel+eigenaar) en standaard **aangevuld** (enkel lege velden, bv.
+  barcode), of optioneel overgeslagen. Zo vul je achteraf barcodes in bestaande records.
+
+### Metadata
+- **Reprints**: apart **`releaseYear`** (persing) naast `year` (origineel uit Discogs-master).
+- **`matchedBy`** in de lookup-respons → melding toont waarop gevonden is (barcode/
+  catalogusnummer/artiest+titel).
+- **Tracklist** wordt nu opgehaald én opgeslagen (formulierveld + bulk-aanvulling).
+- **"Metadata aanvullen"** (`EnrichModal`): loopt de hele collectie af en vult ontbrekende
+  cover/genres/jaar/tracklist in (enkel lege velden), gespreid, met voortgang.
+
+### Statistieken
+- **Totale waarde** = effectief alles. Nieuwe **Totale aankoopwaarde** telt cadeaus
+  (notitie bevat "cadeau"/"kado"/…) en eigenaar `papa` niet mee.
+
+### Bezoekers-/kioskmodus (`/kiosk`)
+- Schermvullend (achter login, geen zijbalk/pincode), **touch & swipe** door grote
+  cover-art, met zoeken, **eigenaar- en genrefilter**, sortering **"Recent aangekocht"**,
+  en een **"Verras me"**-knop (willekeurige lp).
+
+### Detailpagina
+- Info-tab toont nu **alle opgeslagen velden** in **inklapbare secties** (standaard
+  ingeklapt): Algemeen / Persing & uitgave / Aankoop.
+
+### Consistentie
+- "plaat"→"lp" en "platen"→"lp's" in de volledige UI (routes ongewijzigd).
+- Eigenaar-namen hoofdletterongevoelig samengevoegd ("Dario" = "dario").
+- Alle resterende emoji vervangen door SVG line-icons.
+
+> **Functions-deploy:** Firebase slaat ongewijzigde functions over ("No changes
+> detected"). Dat is normaal en betekent dat de gedeployde versie gelijk is aan de
+> code op `main` — de reprint-/`matchedBy`-logica is dus live. Een functions-redeploy
+> gebeurt automatisch zodra `functions/index.js` wijzigt.
