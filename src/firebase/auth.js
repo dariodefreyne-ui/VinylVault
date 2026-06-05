@@ -24,6 +24,10 @@ export async function registerUser(email, password, displayName) {
       email,
       displayName,
       role: 'pending',
+      // Phase 2: persoonlijke collectie. Label = displayName (aanpasbaar via profiel),
+      // collectie standaard publiek zichtbaar voor andere geactiveerde gebruikers.
+      collectionLabel: (displayName || '').trim() || email,
+      collectionVisibility: 'public',
       createdAt: serverTimestamp(),
     });
   } catch (firestoreErr) {

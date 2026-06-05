@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 const inputStyle = {
@@ -179,10 +180,13 @@ function ImagePreview({ file, url }) {
 }
 
 export default function RecordForm({ initialData = {}, onSubmit, onCancel, loading }) {
+  const ownerOptions = useOwnerOptions();
   const [artist, setArtist] = useState(initialData.artist || '');
   const [title, setTitle] = useState(initialData.title || '');
   const [owner, setOwner] = useState(initialData.owner || 'Dario');
-  const [price, setPrice] = useState(initialData.price != null ? String(initialData.price) : '');
+  const [price, setPrice] = useState(
+    initialData.purchasePrice != null ? String(initialData.purchasePrice) : ''
+  );
   const [quantity, setQuantity] = useState(initialData.quantity != null ? String(initialData.quantity) : '1');
   const [purchaseDate, setPurchaseDate] = useState(initialData.purchaseDate || '');
 
@@ -223,11 +227,15 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
 
   function handleSubmit(e) {
     e.preventDefault();
+    const matched = ownerOptions.find(
+      (o) => o.label.toLowerCase() === owner.toLowerCase()
+    );
     onSubmit({
       artist,
       title,
       owner,
-      price: price !== '' ? parseFloat(price) : null,
+      ownerUid: matched ? matched.uid : null,
+      purchasePrice: price !== '' ? parseFloat(price) : null,
       quantity: quantity !== '' ? parseInt(quantity, 10) : 1,
       purchaseDate,
       label,
@@ -295,8 +303,12 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           </Field>
           <Field label="Eigenaar *">
             <Select value={owner} onChange={(e) => setOwner(e.target.value)} required>
-              <option value="Dario">Dario</option>
-              <option value="Papa">Papa</option>
+              {ownerOptions.length === 0 && <option value={owner}>{owner}</option>}
+              {!ownerOptions.some((o) => o.label.toLowerCase() === owner.toLowerCase()) &&
+                owner && <option value={owner}>{owner}</option>}
+              {ownerOptions.map((o) => (
+                <option key={o.label} value={o.label}>{o.label}</option>
+              ))}
             </Select>
           </Field>
           <Field label="Aankoopprijs EUR">

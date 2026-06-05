@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 const inputStyle = {
@@ -80,6 +81,7 @@ function Select({ value, onChange, children, ...rest }) {
 }
 
 export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loading }) {
+  const ownerOptions = useOwnerOptions();
   const [artist, setArtist] = useState(initialData.artist || '');
   const [title, setTitle] = useState(initialData.title || '');
   const [owner, setOwner] = useState(initialData.owner || 'Dario');
@@ -92,10 +94,14 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
 
   function handleSubmit(e) {
     e.preventDefault();
+    const matched = ownerOptions.find(
+      (o) => o.label.toLowerCase() === owner.toLowerCase()
+    );
     onSubmit({
       artist,
       title,
       owner,
+      ownerUid: matched ? matched.uid : null,
       priority,
       targetPrice: targetPrice !== '' ? parseFloat(targetPrice) : null,
       status,
@@ -141,8 +147,11 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
           </Field>
           <Field label="Eigenaar *">
             <Select value={owner} onChange={(e) => setOwner(e.target.value)} required>
-              <option value="Dario">Dario</option>
-              <option value="Papa">Papa</option>
+              {!ownerOptions.some((o) => o.label.toLowerCase() === owner.toLowerCase()) &&
+                owner && <option value={owner}>{owner}</option>}
+              {ownerOptions.map((o) => (
+                <option key={o.label} value={o.label}>{o.label}</option>
+              ))}
             </Select>
           </Field>
           <Field label="Prioriteit">
