@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
+import { useAuth } from '../../hooks/useAuth.jsx';
 import { useToast } from '../ui/Toast.jsx';
 import { lookupRelease } from '../../firebase/lookup.js';
 import BarcodeScanner from './BarcodeScanner.jsx';
@@ -188,9 +189,12 @@ function ImagePreview({ file, url }) {
 
 export default function RecordForm({ initialData = {}, onSubmit, onCancel, loading }) {
   const ownerOptions = useOwnerOptions();
+  const { userDoc } = useAuth();
+  // Standaard-eigenaar = de huidige gebruiker (geen hardcoded naam).
+  const myOwnerLabel = userDoc?.collectionLabel || userDoc?.displayName || '';
   const [artist, setArtist] = useState(initialData.artist || '');
   const [title, setTitle] = useState(initialData.title || '');
-  const [owner, setOwner] = useState(initialData.owner || 'Dario');
+  const [owner, setOwner] = useState(initialData.owner || myOwnerLabel);
   const [price, setPrice] = useState(
     initialData.purchasePrice != null ? String(initialData.purchasePrice) : ''
   );

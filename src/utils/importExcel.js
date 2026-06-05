@@ -81,13 +81,9 @@ export function sanitizeRow(row, mapping) {
   const title = get('title');
   if (title) result.title = title;
 
+  // Eigenaar wordt overgenomen zoals in het bestand (geen hardcoded namen).
   const ownerRaw = get('owner');
-  if (ownerRaw) {
-    const ownerLower = ownerRaw.toLowerCase();
-    if (ownerLower === 'dario') result.owner = 'Dario';
-    else if (ownerLower === 'papa') result.owner = 'Papa';
-    else result.owner = ownerRaw;
-  }
+  if (ownerRaw) result.owner = ownerRaw;
 
   const priceRaw = get('purchasePrice');
   if (priceRaw !== undefined) {

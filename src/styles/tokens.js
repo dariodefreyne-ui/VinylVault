@@ -131,13 +131,12 @@ export function buttonStyle(variant = 'primary') {
   return { ...base, ...(variants[variant] || variants.primary) };
 }
 
-// Stabiele owner-kleur (één bron van waarheid — voorheen verschilde dit per scherm).
+// Stabiele owner-kleur, dynamisch afgeleid uit het label (geen hardcoded namen).
+// Eenzelfde eigenaar krijgt altijd dezelfde kleur, op elk scherm.
 const OWNER_COLOR_KEYS = ['red', 'blue', 'green', 'orange'];
-const KNOWN_OWNERS = { dario: 'red', papa: 'blue' };
 export function ownerColor(label) {
   const key = (label || '').trim().toLowerCase();
   if (!key) return 'blue';
-  if (KNOWN_OWNERS[key]) return KNOWN_OWNERS[key];
   let hash = 0;
   for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
   return OWNER_COLOR_KEYS[hash % OWNER_COLOR_KEYS.length];
