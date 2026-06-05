@@ -31,13 +31,57 @@ const FIELD_LABELS = {
 
 const REQUIRED_FIELDS = ['artist', 'owner'];
 
-// Sleutel om dubbele lp's te herkennen bij heropladen: barcode indien aanwezig,
-// anders artiest+titel+eigenaar (genormaliseerd).
-export function recordKey(r) {
-  const bc = (r.barcode != null ? String(r.barcode) : '').trim();
-  if (bc) return 'bc:' + bc;
-  const norm = (v) => (v != null ? String(v) : '').trim().toLowerCase();
+// Sleutels om dubbele lp's te herkennen bij heropladen. We indexeren op ZOWEL
+// barcode als artiest+titel+eigenaar, zodat een rij mét barcode ook een bestaande
+// lp zónder barcode terugvindt (en omgekeerd) — anders zouden er duplicaten ontstaan.
+const norm = (v) => (v != null ? String(v) : '').trim().toLowerCase();
+
+function atKey(r) {
   return 'at:' + norm(r.artist) + '|' + norm(r.title) + '|' + norm(r.owner);
+}
+function bcKey(r) {
+  const bc = (r.barcode != null ? String(r.barcode) : '').trim();
+  return bc ? 'bc:' + bc : null;
+}
+export function recordKeys(r) {
+  const keys = [atKey(r)];
+  const b = bcKey(r);
+  if (b) keys.push(b);
+  return keys;
+}
+// Indexeert bestaande records op al hun sleutels.
+export function buildExistingIndex(records) {
+  const m = new Map();
+  for (const r of records) {
+    for (const k of recordKeys(r)) m.set(k, r);
+  }
+  return m;
+}
+// Zoekt een bestaande lp die bij deze rij hoort (via eender welke sleutel).
+export function findExisting(index, row) {
+  for (const k of recordKeys(row)) {
+    if (index.has(k)) return index.get(k);
+  }
+  return null;
+}
+
+// Velden die bij een bestaande lp aangevuld mogen worden (nooit overschrijven).
+const MERGE_FIELDS = [
+  'purchasePrice', 'label', 'year', 'releaseYear', 'country',
+  'format', 'catalogNumber', 'barcode', 'condition', 'notes',
+];
+
+function isEmptyVal(v) {
+  return v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0);
+}
+
+// Bouwt de bij-te-werken velden voor een bestaande lp: enkel lege velden invullen.
+export function mergeUpdates(existing, row) {
+  const u = {};
+  for (const f of MERGE_FIELDS) {
+    if (isEmptyVal(existing[f]) && !isEmptyVal(row[f])) u[f] = row[f];
+  }
+  return u;
 }
 
 // ---------------------------------------------------------------------------
@@ -366,24 +410,28 @@ function StepMapping({ headers, initialMapping, onNext, onBack }) {
 // ---------------------------------------------------------------------------
 // Step 3 — Preview + validatie
 // ---------------------------------------------------------------------------
-function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
+function StepPreview({ rows, mapping, existingByKey, onNext, onBack }) {
   const [skipErrors, setSkipErrors] = useState(true);
-  const [skipExisting, setSkipExisting] = useState(true);
+  // 'merge' = bestaande lp's aanvullen (lege velden, bv. barcode); 'skip' = overslaan
+  const [existingMode, setExistingMode] = useState('merge');
 
   const sanitized = rows.map((raw) => {
     const record = sanitizeRow(raw, mapping);
     const hasError = !record.artist || !record.owner;
-    const isDuplicate = !hasError && existingKeys.has(recordKey(record));
-    return { record, hasError, isDuplicate };
+    const existing = hasError ? null : findExisting(existingByKey, record);
+    const isDuplicate = !!existing;
+    // Heeft het aanvullen van deze bestaande lp effect?
+    const hasMerge = isDuplicate && Object.keys(mergeUpdates(existing, record)).length > 0;
+    return { record, hasError, isDuplicate, hasMerge };
   });
 
   const totalRows = sanitized.length;
   const errorCount = sanitized.filter((r) => r.hasError).length;
+  const newCount = sanitized.filter((r) => !r.hasError && !r.isDuplicate).length;
   const dupCount = sanitized.filter((r) => r.isDuplicate).length;
-  const validCount = sanitized.filter(
-    (r) => !r.hasError && !(skipExisting && r.isDuplicate)
-  ).length;
-  const importableCount = skipErrors ? validCount : totalRows - (skipExisting ? dupCount : 0);
+  const mergeCount = sanitized.filter((r) => r.hasMerge).length;
+  const importableCount =
+    newCount + (existingMode === 'merge' ? mergeCount : 0);
 
   const VISIBLE_FIELDS = ['artist', 'title', 'owner', 'year', 'catalogNumber', 'barcode'];
 
@@ -425,8 +473,10 @@ function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
   return (
     <div>
       <p style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '4px' }}>
-        {totalRows} rijen &middot; {errorCount} fout{errorCount !== 1 ? 'en' : ''}
+        {totalRows} rijen &middot; {newCount} nieuw
         {dupCount > 0 && <> &middot; {dupCount} reeds in collectie</>}
+        {existingMode === 'merge' && mergeCount > 0 && <> &middot; {mergeCount} bij te werken</>}
+        {errorCount > 0 && <> &middot; {errorCount} fout{errorCount !== 1 ? 'en' : ''}</>}
       </p>
 
       <label style={checkboxLabelStyle}>
@@ -438,14 +488,25 @@ function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
         Sla foute rijen over
       </label>
 
-      <label style={{ ...checkboxLabelStyle, marginTop: '0' }}>
-        <input
-          type="checkbox"
-          checked={skipExisting}
-          onChange={(e) => setSkipExisting(e.target.checked)}
-        />
-        Sla lp's over die al in de collectie staan (op barcode of artiest+titel)
-      </label>
+      <div style={{ ...checkboxLabelStyle, marginTop: '0', alignItems: 'center' }}>
+        <span>Lp's die al in de collectie staan:</span>
+        <select
+          value={existingMode}
+          onChange={(e) => setExistingMode(e.target.value)}
+          style={{
+            backgroundColor: colors.bgCard,
+            border: '1px solid ' + colors.borderColor,
+            borderRadius: radius.sm,
+            padding: '4px 8px',
+            color: colors.textPrimary,
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="merge">aanvullen (lege velden, bv. barcode)</option>
+          <option value="skip">overslaan</option>
+        </select>
+      </div>
 
       <div style={{
         overflowX: 'auto',
@@ -464,13 +525,20 @@ function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
             </tr>
           </thead>
           <tbody>
-            {sanitized.map(({ record, hasError, isDuplicate }, i) => {
+            {sanitized.map(({ record, hasError, isDuplicate, hasMerge }, i) => {
               if (skipErrors && hasError) return null;
-              if (skipExisting && isDuplicate) return null;
+              if (isDuplicate && existingMode === 'skip') return null;
+              // teken: fout (✗), bijwerken (↻), nieuw (✓)
+              const mark = hasError ? '✗' : isDuplicate ? (hasMerge ? '↻' : '–') : '✓';
+              const markColor = hasError
+                ? colors.accentRed
+                : isDuplicate
+                ? colors.brand
+                : colors.accentGreen;
               return (
                 <tr key={i}>
-                  <td style={{ ...tdStyle(hasError), color: hasError ? colors.accentRed : colors.accentGreen }}>
-                    {hasError ? '✗' : '✓'}
+                  <td style={{ ...tdStyle(hasError), color: markColor }} title={isDuplicate ? (hasMerge ? 'wordt aangevuld' : 'al volledig aanwezig') : 'nieuw'}>
+                    {mark}
                   </td>
                   {VISIBLE_FIELDS.map((f) => (
                     <td key={f} style={tdStyle(hasError)}>
@@ -494,10 +562,10 @@ function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
             opacity: importableCount === 0 ? 0.5 : 1,
             cursor: importableCount === 0 ? 'not-allowed' : 'pointer',
           }}
-          onClick={() => { if (importableCount > 0) onNext(sanitized, skipErrors, skipExisting); }}
+          onClick={() => { if (importableCount > 0) onNext(sanitized, skipErrors, existingMode); }}
           disabled={importableCount === 0}
         >
-          Importeer ({importableCount} rijen)
+          Verwerk ({importableCount})
         </button>
       </div>
     </div>
@@ -507,40 +575,55 @@ function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
 // ---------------------------------------------------------------------------
 // Step 4 — Importeren
 // ---------------------------------------------------------------------------
-function StepImporting({ sanitizedRows, skipErrors, skipExisting, user, onDone, onError }) {
+function StepImporting({ sanitizedRows, skipErrors, existingMode, existingByKey, user, onDone, onError }) {
   const [done, setDone] = useState(0);
   const [started, setStarted] = useState(false);
 
-  const rowsToImport = sanitizedRows.filter(
-    (r) => !(skipErrors && r.hasError) && !(skipExisting && r.isDuplicate)
-  );
+  // Te verwerken rijen: nieuwe lp's (aanmaken) + bestaande met aan te vullen velden.
+  const rowsToImport = sanitizedRows.filter((r) => {
+    if (skipErrors && r.hasError) return false;
+    if (r.hasError) return false;
+    if (r.isDuplicate) return existingMode === 'merge' && r.hasMerge;
+    return true;
+  });
 
   const total = rowsToImport.length;
 
   const runImport = useCallback(async () => {
     try {
-      const BATCH_SIZE = 500;
+      const BATCH_SIZE = 400;
       let processed = 0;
 
       while (processed < rowsToImport.length) {
         const chunk = rowsToImport.slice(processed, processed + BATCH_SIZE);
         const batch = writeBatch(db);
 
-        for (const { record } of chunk) {
-          const artistText = record.artist || '';
-          const titleText = record.title || '';
-          const text = (artistText + ' ' + titleText).toLowerCase();
-          const searchKeywords = [...new Set(text.split(/\s+/).filter((w) => w.length > 0))];
-          const artistSort = artistText.toLowerCase().replace(/^the\s+/i, '');
+        for (const { record, isDuplicate } of chunk) {
+          if (isDuplicate) {
+            // Bestaande lp aanvullen — enkel lege velden.
+            const existing = findExisting(existingByKey, record);
+            if (existing) {
+              const updates = mergeUpdates(existing, record);
+              if (Object.keys(updates).length > 0) {
+                batch.update(doc(db, 'records', existing.id), updates);
+              }
+            }
+          } else {
+            const artistText = record.artist || '';
+            const titleText = record.title || '';
+            const text = (artistText + ' ' + titleText).toLowerCase();
+            const searchKeywords = [...new Set(text.split(/\s+/).filter((w) => w.length > 0))];
+            const artistSort = artistText.toLowerCase().replace(/^the\s+/i, '');
 
-          const ref = doc(collection(db, 'records'));
-          batch.set(ref, {
-            ...record,
-            artistSort,
-            searchKeywords,
-            dateAdded: serverTimestamp(),
-            addedBy: user ? user.uid : null,
-          });
+            const ref = doc(collection(db, 'records'));
+            batch.set(ref, {
+              ...record,
+              artistSort,
+              searchKeywords,
+              dateAdded: serverTimestamp(),
+              addedBy: user ? user.uid : null,
+            });
+          }
         }
 
         await batch.commit();
@@ -552,7 +635,7 @@ function StepImporting({ sanitizedRows, skipErrors, skipExisting, user, onDone, 
     } catch (err) {
       onError(err);
     }
-  }, [rowsToImport, user, onDone, onError]);
+  }, [rowsToImport, existingMode, existingByKey, user, onDone, onError]);
 
   useEffect(() => {
     if (!started) {
@@ -605,10 +688,7 @@ export default function ImportModal({ open, onClose }) {
   const { records } = useRecords();
   const showToast = useToast();
 
-  const existingKeys = useMemo(
-    () => new Set(records.map((r) => recordKey(r))),
-    [records]
-  );
+  const existingByKey = useMemo(() => buildExistingIndex(records), [records]);
 
   const [step, setStep] = useState(1);
   const [parsedRows, setParsedRows] = useState(null);
@@ -616,7 +696,7 @@ export default function ImportModal({ open, onClose }) {
   const [mapping, setMapping] = useState({});
   const [sanitizedRows, setSanitizedRows] = useState(null);
   const [skipErrors, setSkipErrors] = useState(true);
-  const [skipExisting, setSkipExisting] = useState(true);
+  const [existingMode, setExistingMode] = useState('merge');
 
   function reset() {
     setStep(1);
@@ -645,10 +725,10 @@ export default function ImportModal({ open, onClose }) {
     setStep(3);
   }
 
-  function handlePreviewNext(rows, skip, skipDup) {
+  function handlePreviewNext(rows, skip, mode) {
     setSanitizedRows(rows);
     setSkipErrors(skip);
-    setSkipExisting(skipDup);
+    setExistingMode(mode);
     setStep(4);
   }
 
@@ -691,7 +771,7 @@ export default function ImportModal({ open, onClose }) {
         <StepPreview
           rows={parsedRows}
           mapping={mapping}
-          existingKeys={existingKeys}
+          existingByKey={existingByKey}
           onNext={handlePreviewNext}
           onBack={() => setStep(2)}
         />
@@ -701,7 +781,8 @@ export default function ImportModal({ open, onClose }) {
         <StepImporting
           sanitizedRows={sanitizedRows}
           skipErrors={skipErrors}
-          skipExisting={skipExisting}
+          existingMode={existingMode}
+          existingByKey={existingByKey}
           user={user}
           onDone={handleImportDone}
           onError={handleImportError}
