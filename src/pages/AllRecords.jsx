@@ -6,6 +6,7 @@ import { isBeheerder } from '../utils/roles.js';
 import RecordCard from '../components/records/RecordCard.jsx';
 import Chip from '../components/ui/Chip.jsx';
 import ImportModal from '../components/ImportModal.jsx';
+import { exportToExcel } from '../utils/importExcel.js';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 const SORT_OPTIONS = [
@@ -253,6 +254,15 @@ export default function AllRecords() {
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+
+        {/* Export button (alle gebruikers) */}
+        <button
+          style={buttonStyle('secondary')}
+          onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
+          disabled={loading || filtered.length === 0}
+        >
+          Exporteer
+        </button>
 
         {/* Add + Import buttons (beheerder only) */}
         {isBeheerder(role) && (

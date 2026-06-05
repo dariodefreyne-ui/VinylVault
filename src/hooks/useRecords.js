@@ -6,8 +6,6 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  query,
-  orderBy,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
@@ -41,6 +39,10 @@ function computeKpis(records) {
   };
 }
 
+export function invalidateRecordsCache() {
+  cachedRecords = null;
+}
+
 export function useRecords() {
   const { user } = useAuth();
   const [records, setRecords] = useState(cachedRecords || []);
@@ -53,13 +55,16 @@ export function useRecords() {
 
     async function loadAll() {
       try {
-        const q = query(
-          collection(db, 'records'),
-          orderBy('artistSort', 'asc')
-        );
-        const snap = await getDocs(q);
+        // Geen orderBy — records zonder artistSort (bijv. ouder of geïmporteerd) worden anders uitgesloten.
+        // Sortering gebeurt client-side zodat ook records zonder artistSort zichtbaar zijn.
+        const snap = await getDocs(collection(db, 'records'));
         if (!cancelled) {
           const loaded = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          loaded.sort((a, b) => {
+            const ka = a.artistSort || (a.artist || '').toLowerCase().replace(/^the\s+/i, '');
+            const kb = b.artistSort || (b.artist || '').toLowerCase().replace(/^the\s+/i, '');
+            return ka.localeCompare(kb);
+          });
           cachedRecords = loaded;
           setRecords(loaded);
           setLoading(false);

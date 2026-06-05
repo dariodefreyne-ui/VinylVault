@@ -70,9 +70,9 @@ export function sanitizeRow(row, mapping) {
   const ownerRaw = get('owner');
   if (ownerRaw) {
     const ownerLower = ownerRaw.toLowerCase();
-    if (ownerLower === 'dario') result.owner = 'dario';
-    else if (ownerLower === 'papa') result.owner = 'papa';
-    else result.owner = ownerLower;
+    if (ownerLower === 'dario') result.owner = 'Dario';
+    else if (ownerLower === 'papa') result.owner = 'Papa';
+    else result.owner = ownerRaw;
   }
 
   const priceRaw = get('purchasePrice');
@@ -100,6 +100,34 @@ export function sanitizeRow(row, mapping) {
   if (notes) result.notes = notes;
 
   return result;
+}
+
+/**
+ * exportToExcel(records, filename)
+ * Exports an array of record objects to an .xlsx file and triggers download.
+ */
+export function exportToExcel(records, filename = 'vinylvault-export.xlsx') {
+  const rows = records.map((r) => ({
+    Artiest: r.artist || '',
+    Titel: r.title || '',
+    Eigenaar: r.owner || '',
+    Aankoopprijs: r.purchasePrice != null ? r.purchasePrice : '',
+    Label: r.label || '',
+    Jaar: r.year || '',
+    Format: r.format || '',
+    Barcode: r.barcode || '',
+    Catalogusnummer: r.catalogNumber || '',
+    Conditie: r.condition || '',
+    Land: r.country || '',
+    Genres: Array.isArray(r.genres) ? r.genres.join(', ') : '',
+    Aankoopdatum: r.purchaseDate || '',
+    Notities: r.notes || '',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Collectie');
+  XLSX.writeFile(wb, filename);
 }
 
 /**
