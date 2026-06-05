@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { colors, radius, badgeStyle, buttonStyle } from '../../styles/tokens.js';
+import { colors, radius, badgeStyle, buttonStyle, ownerColor } from '../../styles/tokens.js';
+import Icon from '../ui/Icon.jsx';
 
 function priorityBadgeStyle(priority) {
   if (priority === 'hoog') return badgeStyle('red');
@@ -46,9 +47,8 @@ export default function WishlistCard({ item, onEdit, onClick }) {
     notes,
   } = item;
 
-  const ownerLower = (owner || '').toLowerCase();
-  const ownerColor = ownerLower === 'dario' ? 'red' : 'blue';
-  const ownerLabel = ownerLower === 'dario' ? 'Dario' : ownerLower === 'papa' ? 'Papa' : owner;
+  const ownerBadge = ownerColor(owner);
+  const ownerLabel = owner;
 
   const cardStyle = {
     backgroundColor: colors.bgCard,
@@ -143,7 +143,7 @@ export default function WishlistCard({ item, onEdit, onClick }) {
       <div style={topRowStyle}>
         <div style={artistStyle}>{artist || 'Onbekende artiest'}</div>
         {owner && (
-          <span style={{ flexShrink: 0, ...badgeStyle(ownerColor) }}>
+          <span style={{ flexShrink: 0, ...badgeStyle(ownerBadge) }}>
             {ownerLabel}
           </span>
         )}
@@ -190,7 +190,7 @@ export default function WishlistCard({ item, onEdit, onClick }) {
           onClick={handleEditClick}
           aria-label="Bewerken"
         >
-          ✏️ Bewerken
+          <Icon name="edit" size={14} /> Bewerken
         </button>
       </div>
     </div>

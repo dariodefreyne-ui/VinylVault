@@ -18,6 +18,13 @@ const PATHS = {
       <path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5" />
     </>
   ),
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 19c0-3.2 2.7-4.8 6-4.8s6 1.6 6 4.8" />
+      <path d="M16 5.2a3.2 3.2 0 0 1 0 6M17.5 14.4c2.2.5 3.5 1.9 3.5 4.6" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   shield: <path d="M12 3l7 3v5c0 4.4-3 7.7-7 9-4-1.3-7-4.6-7-9V6l7-3Z" />,
   logout: <path d="M15 4h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3M10 8l-4 4 4 4M6 12h11" />,
@@ -37,7 +44,22 @@ const PATHS = {
   edit: <path d="M14.5 5.5 18.5 9.5M4 20l1-4L16 5a1.5 1.5 0 0 1 2 0l1 1a1.5 1.5 0 0 1 0 2L8 19l-4 1Z" />,
   trash: <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" />,
   upload: <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />,
+  download: <path d="M12 4v12M7 11l5 5 5-5M5 20h14" />,
   back: <path d="M14 6l-6 6 6 6" />,
+  lock: (
+    <>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  key: (
+    <>
+      <circle cx="8" cy="15" r="3.5" />
+      <path d="m10.5 12.5 8-8M16 7l2 2M14 9l1.5 1.5" />
+    </>
+  ),
+  alert: <path d="M12 4 2.5 20h19L12 4ZM12 10v5M12 17.5v.01" />,
+  check: <path d="M5 12.5 10 17 19 7" />,
 };
 
 export default function Icon({ name, size = 18, strokeWidth = 1.6, style, ...rest }) {

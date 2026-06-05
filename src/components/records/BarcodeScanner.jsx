@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Icon from '../ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 // Gebruikt de browser-native BarcodeDetector API (geen externe dependency).
@@ -101,8 +102,8 @@ export default function BarcodeScanner({ open, onClose, onResult }) {
   return (
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-label="Barcode scannen">
       <div style={cardStyle}>
-        <div style={{ fontSize: '16px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-          📷 Scan barcode
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '16px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
+          <Icon name="camera" size={18} /> Scan barcode
         </div>
         {error ? (
           <p style={{ fontSize: '14px', color: colors.accentRed, lineHeight: 1.5 }}>{error}</p>

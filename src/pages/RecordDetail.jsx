@@ -305,7 +305,7 @@ export default function RecordDetail() {
         </button>
         {canEdit && (
           <button style={buttonStyle('primary')} onClick={() => setEditOpen(true)}>
-            ✏️ Bewerken
+            <Icon name="edit" size={15} /> Bewerken
           </button>
         )}
       </div>
@@ -455,7 +455,7 @@ export default function RecordDetail() {
               style={buttonStyle('danger')}
               onClick={() => setConfirmDelete(true)}
             >
-              🗑️ Verwijderen
+              <Icon name="trash" size={15} /> Verwijderen
             </button>
           ) : (
             <>

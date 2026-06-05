@@ -198,7 +198,9 @@ export default function Home() {
           style={buttonStyle('secondary')}
           onClick={() => setShowAll((v) => !v)}
         >
-          {showAll ? '👤 Toon mijn collectie' : '👥 Toon alle collecties'}
+          {showAll
+            ? <><Icon name="user" size={15} /> Toon mijn collectie</>
+            : <><Icon name="users" size={15} /> Toon alle collecties</>}
         </button>
       </div>
 

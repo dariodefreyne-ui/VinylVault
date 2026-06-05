@@ -3,6 +3,7 @@ import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
 import { useToast } from '../ui/Toast.jsx';
 import { lookupRelease } from '../../firebase/lookup.js';
 import BarcodeScanner from './BarcodeScanner.jsx';
+import Icon from '../ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 const FORMAT_OPTIONS = ['LP', '7"', '10"', '12"', 'Box Set', 'Andere'];
@@ -367,7 +368,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           onClick={handleLookup}
           disabled={looking}
         >
-          {looking ? 'Zoeken…' : '🔍 Metadata ophalen'}
+          {looking ? 'Zoeken…' : <><Icon name="search" size={15} /> Metadata ophalen</>}
         </button>
         <button
           type="button"
@@ -375,7 +376,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           onClick={() => setScanOpen(true)}
           disabled={looking}
         >
-          📷 Scan barcode
+          <Icon name="camera" size={15} /> Scan barcode
         </button>
       </div>
 

@@ -284,7 +284,7 @@ export default function AllRecords() {
           onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
           disabled={loading || filtered.length === 0}
         >
-          Exporteer
+          <Icon name="upload" size={15} /> Exporteer
         </button>
 
         {/* Add + Import buttons (beheerder only) */}
@@ -294,13 +294,13 @@ export default function AllRecords() {
               style={buttonStyle('primary')}
               onClick={() => navigate('/platen/nieuw')}
             >
-              + Plaat toevoegen
+              <Icon name="plus" size={15} /> Plaat toevoegen
             </button>
             <button
               style={buttonStyle('secondary')}
               onClick={() => setImportOpen(true)}
             >
-              Importeer
+              <Icon name="download" size={15} /> Importeer
             </button>
           </>
         )}
