@@ -8,12 +8,13 @@ import { colors, radius, buttonStyle } from '../styles/tokens.js';
 const FORMAT_OPTIONS = ['LP', '7"', '10"', '12"', 'Box Set', 'Andere'];
 const DELAY_MS = 1500; // gespreid i.v.m. API-limieten (Discogs/MusicBrainz)
 
-// Een lp heeft baat bij aanvulling als cover, genres of jaar ontbreken.
+// Een lp heeft baat bij aanvulling als cover, genres, jaar of tracklist ontbreken.
 function needsEnrichment(r) {
   return (
     !r.coverImageUrl ||
     !(Array.isArray(r.genres) && r.genres.length > 0) ||
-    !r.year
+    !r.year ||
+    !(Array.isArray(r.tracklist) && r.tracklist.length > 0)
   );
 }
 
@@ -29,6 +30,9 @@ function buildUpdates(r, res) {
   if (!r.format && res.format && FORMAT_OPTIONS.includes(res.format)) u.format = res.format;
   if ((!Array.isArray(r.genres) || r.genres.length === 0) && Array.isArray(res.genres) && res.genres.length > 0) {
     u.genres = res.genres;
+  }
+  if ((!Array.isArray(r.tracklist) || r.tracklist.length === 0) && Array.isArray(res.tracklist) && res.tracklist.length > 0) {
+    u.tracklist = res.tracklist;
   }
   if (!r.coverImageUrl && res.coverImageUrl) u.coverImageUrl = res.coverImageUrl;
   return u;

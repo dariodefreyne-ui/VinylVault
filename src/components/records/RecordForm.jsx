@@ -207,6 +207,9 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   const [catalogNumber, setCatalogNumber] = useState(initialData.catalogNumber || '');
   const [barcode, setBarcode] = useState(initialData.barcode || '');
   const [condition, setCondition] = useState(initialData.condition || '');
+  const [tracklist, setTracklist] = useState(
+    Array.isArray(initialData.tracklist) ? initialData.tracklist : []
+  );
 
   const [coverFile, setCoverFile] = useState(null);
   const [coverImageUrl, setCoverImageUrl] = useState(initialData.coverImageUrl || null);
@@ -233,6 +236,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
     if (genres.length === 0 && Array.isArray(r.genres) && r.genres.length > 0) setGenres(r.genres);
     if (!catalogNumber && r.catalogNumber) setCatalogNumber(r.catalogNumber);
     if (!barcode && r.barcode) setBarcode(r.barcode);
+    if (tracklist.length === 0 && Array.isArray(r.tracklist) && r.tracklist.length > 0) setTracklist(r.tracklist);
     if (!coverImageUrl && !coverFile && r.coverImageUrl) setCoverImageUrl(r.coverImageUrl);
   }
 
@@ -318,6 +322,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       catalogNumber,
       barcode,
       condition,
+      tracklist: tracklist.map((t) => t.trim()).filter(Boolean),
       coverFile,
       coverImageUrl,
       extraFiles,
@@ -579,6 +584,18 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
             </div>
           </Field>
         </div>
+      </div>
+
+      {/* Tracklist */}
+      <div style={sectionWrapStyle}>
+        <h3 style={sectionHeaderStyle}>Tracklist</h3>
+        <textarea
+          value={tracklist.join('\n')}
+          onChange={(e) => setTracklist(e.target.value.split('\n'))}
+          rows={6}
+          placeholder={'Eén nummer per lijn — wordt automatisch ingevuld via "Metadata ophalen"'}
+          style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+        />
       </div>
 
       {/* Notities */}

@@ -55,6 +55,30 @@ function InfoRow({ label, value }) {
   );
 }
 
+// Inklapbare sectie (accordion), standaard ingeklapt.
+function Section({ title, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ border: `1px solid ${colors.borderColor}`, borderRadius: radius.md, marginBottom: '12px', overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '10px', padding: '14px 16px', backgroundColor: colors.bgCard, border: 'none',
+          cursor: 'pointer', color: colors.textPrimary, fontSize: '15px', fontWeight: 600,
+          fontFamily: 'inherit', textAlign: 'left',
+        }}
+      >
+        <span>{title}</span>
+        <span style={{ display: 'flex', color: colors.textSecondary, transition: 'transform 0.2s ease', transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+          <Icon name="forward" size={18} />
+        </span>
+      </button>
+      {open && <div style={{ padding: '4px 16px 18px' }}>{children}</div>}
+    </div>
+  );
+}
+
 export default function RecordDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -283,6 +307,7 @@ export default function RecordDetail() {
     catalogNumber: record.catalogNumber || '',
     barcode: record.barcode || '',
     condition: record.condition || '',
+    tracklist: Array.isArray(record.tracklist) ? record.tracklist : [],
     notes: record.notes || '',
     coverImageUrl: record.coverImageUrl || null,
   };
@@ -349,53 +374,60 @@ export default function RecordDetail() {
         ))}
       </div>
 
-      {/* Tab: Info */}
+      {/* Tab: Info — alle opgeslagen info, in inklapbare secties (standaard ingeklapt) */}
       {activeTab === 'info' && (
-        <div style={infoGridStyle}>
-          <InfoRow label="Label" value={record.label} />
-          <InfoRow label="Catalogusnummer" value={record.catalogNumber} />
-          <InfoRow label="Barcode" value={record.barcode} />
-          <InfoRow label="Land" value={record.country} />
-          <InfoRow label="Jaar" value={record.year} />
-          <InfoRow
-            label="Uitgavejaar"
-            value={
-              record.releaseYear
-                ? record.releaseYear +
-                  (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
-                : null
-            }
-          />
-          <InfoRow label="Format" value={record.format} />
-          <InfoRow label="Conditie" value={record.condition} />
-          <InfoRow label="Aankoopprijs" value={record.purchasePrice != null ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
-          <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
-          <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
-          {record.genres && record.genres.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Genres
-              </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {record.genres.map((g) => (
-                  <span
-                    key={g}
-                    style={{
-                      display: 'inline-flex',
-                      padding: '2px 8px',
-                      borderRadius: radius.sm,
-                      backgroundColor: 'rgba(229,57,53,0.15)',
-                      color: colors.accentRed,
-                      fontSize: '12px',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {g}
-                  </span>
-                ))}
-              </div>
+        <div>
+          <Section title="Algemeen">
+            <div style={infoGridStyle}>
+              <InfoRow label="Artiest" value={record.artist} />
+              <InfoRow label="Titel" value={record.title} />
+              <InfoRow label="Eigenaar" value={record.owner} />
+              <InfoRow label="Aantal" value={record.quantity} />
             </div>
-          )}
+            {record.genres && record.genres.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Genres
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {record.genres.map((g) => (
+                    <span key={g} style={{ display: 'inline-flex', padding: '2px 10px', borderRadius: '999px', backgroundColor: colors.brandDim, color: colors.brandStrong, fontSize: '12px', fontWeight: 500 }}>
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Section>
+
+          <Section title="Persing & uitgave">
+            <div style={infoGridStyle}>
+              <InfoRow label="Label" value={record.label} />
+              <InfoRow label="Catalogusnummer" value={record.catalogNumber} />
+              <InfoRow label="Barcode" value={record.barcode} />
+              <InfoRow label="Land" value={record.country} />
+              <InfoRow label="Jaar (origineel)" value={record.year} />
+              <InfoRow
+                label="Uitgavejaar"
+                value={
+                  record.releaseYear
+                    ? record.releaseYear +
+                      (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
+                    : null
+                }
+              />
+              <InfoRow label="Format" value={record.format} />
+              <InfoRow label="Conditie" value={record.condition} />
+            </div>
+          </Section>
+
+          <Section title="Aankoop">
+            <div style={infoGridStyle}>
+              <InfoRow label="Aankoopprijs" value={record.purchasePrice != null && record.purchasePrice !== '' ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
+              <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
+              <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
+            </div>
+          </Section>
         </div>
       )}
 
