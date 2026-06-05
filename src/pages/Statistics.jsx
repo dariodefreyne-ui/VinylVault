@@ -36,6 +36,13 @@ const ownerFilters = [
   { key: 'papa', label: 'Papa' },
 ];
 
+// Een lp telt niet mee in de aankoopwaarde als hij cadeau was (of papa's lp is).
+const GIFT_WORDS = ['cadeau', 'kado', 'geschenk', 'gekregen', 'gift', 'present', 'cadeautje'];
+function isGift(notes) {
+  const n = (notes || '').toLowerCase();
+  return GIFT_WORDS.some((w) => n.includes(w));
+}
+
 function computeStats(records, ownerFilter) {
   const filtered =
     ownerFilter === 'alles'
@@ -45,7 +52,8 @@ function computeStats(records, ownerFilter) {
         );
 
   let totalQuantity = 0;
-  let totalValue = 0;
+  let totalValue = 0;       // effectieve totale waarde (alles)
+  let purchaseValue = 0;    // wat je effectief betaald hebt (geen cadeaus, geen papa)
   const artists = new Set();
 
   let darioValue = 0;
@@ -56,6 +64,10 @@ function computeStats(records, ownerFilter) {
     const price = parseFloat(r.purchasePrice) || 0;
     totalQuantity += qty;
     totalValue += price * qty;
+    const owner = (r.owner || '').toLowerCase();
+    if (owner !== 'papa' && !isGift(r.notes)) {
+      purchaseValue += price * qty;
+    }
     if (r.artist) artists.add(r.artist);
   }
 
@@ -71,6 +83,7 @@ function computeStats(records, ownerFilter) {
   return {
     totalQuantity,
     totalValue,
+    purchaseValue,
     uniqueArtists: artists.size,
     darioValue,
     papaValue,
@@ -138,6 +151,11 @@ export default function Statistics() {
                 label="Totale waarde"
                 value={`€${stats.totalValue.toFixed(2)}`}
                 color="green"
+              />
+              <KpiTegel
+                label="Totale aankoopwaarde"
+                value={`€${stats.purchaseValue.toFixed(2)}`}
+                color="orange"
               />
               <KpiTegel label="Unieke artiesten" value={stats.uniqueArtists} />
               <KpiTegel
