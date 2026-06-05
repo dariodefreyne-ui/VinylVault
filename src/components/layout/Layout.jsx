@@ -15,7 +15,7 @@ export default function Layout({ children }) {
 
   const shellStyle = {
     display: 'flex',
-    height: '100vh',
+    height: '100dvh',
     width: '100%',
     backgroundColor: colors.bgPrimary,
     overflow: 'hidden',
@@ -66,6 +66,8 @@ export default function Layout({ children }) {
   const contentStyle = {
     flex: 1,
     overflowY: 'auto',
+    overscrollBehavior: 'contain',
+    WebkitOverflowScrolling: 'touch',
     padding: '24px',
   };
 

@@ -242,7 +242,8 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       const res = await lookupRelease(params);
       if (res.found && res.result) {
         applyResult(res.result);
-        showToast(`Metadata gevonden via ${res.result.source}.`, 'success');
+        const via = res.result.matchedBy ? ` op ${res.result.matchedBy}` : '';
+        showToast(`Metadata gevonden via ${res.result.source}${via}.`, 'success');
       } else {
         showToast('Geen metadata gevonden. Vul de gegevens handmatig in.', 'error');
       }
@@ -447,9 +448,9 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
         </div>
       </div>
 
-      {/* Plaat-details */}
+      {/* Lp-details */}
       <div style={sectionWrapStyle}>
-        <h3 style={sectionHeaderStyle}>Plaat-details</h3>
+        <h3 style={sectionHeaderStyle}>Lp-details</h3>
         <div style={fieldGridStyle}>
           <Field label="Label">
             <Input
@@ -587,7 +588,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
-          placeholder="Opmerkingen over de plaat..."
+          placeholder="Opmerkingen over de lp..."
           style={{
             ...inputStyle,
             resize: 'vertical',

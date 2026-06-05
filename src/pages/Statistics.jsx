@@ -133,7 +133,7 @@ export default function Statistics() {
                 flexWrap: 'wrap',
               }}
             >
-              <KpiTegel label="Totaal platen" value={stats.totalQuantity} />
+              <KpiTegel label="Totaal lp's" value={stats.totalQuantity} />
               <KpiTegel
                 label="Totale waarde"
                 value={`€${stats.totalValue.toFixed(2)}`}

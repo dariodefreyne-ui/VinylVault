@@ -119,7 +119,7 @@ export default function RecordDetail() {
       await updateRecord(id, updates);
       setEditOpen(false);
       await loadRecord();
-      showToast('Plaat bijgewerkt!', 'success');
+      showToast('Lp bijgewerkt!', 'success');
     } catch (err) {
       console.error('RecordDetail: failed to update record', err);
       showToast('Er is iets misgegaan bij het opslaan.', 'error');
@@ -132,7 +132,7 @@ export default function RecordDetail() {
     setDeleteLoading(true);
     try {
       await deleteRecord(id);
-      showToast('Plaat verwijderd.', 'success');
+      showToast('Lp verwijderd.', 'success');
       navigate('/platen');
     } catch (err) {
       console.error('RecordDetail: failed to delete record', err);
@@ -252,9 +252,9 @@ export default function RecordDetail() {
   if (notFound) {
     return (
       <div style={pageStyle}>
-        <p style={{ color: colors.textSecondary, fontSize: '16px' }}>Plaat niet gevonden.</p>
+        <p style={{ color: colors.textSecondary, fontSize: '16px' }}>Lp niet gevonden.</p>
         <button style={buttonStyle('secondary')} onClick={() => navigate('/platen')}>
-          ← Terug naar platen
+          ← Terug naar lp's
         </button>
       </div>
     );
@@ -499,7 +499,7 @@ export default function RecordDetail() {
       <DetailModal
         open={editOpen}
         onClose={() => setEditOpen(false)}
-        title="Plaat bewerken"
+        title="Lp bewerken"
       >
         <RecordForm
           initialData={formInitialData}

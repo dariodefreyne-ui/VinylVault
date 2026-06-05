@@ -69,7 +69,7 @@ export default function RecordAdd() {
         await updateRecord(newId, updates);
       }
 
-      showToast('Plaat toegevoegd!', 'success');
+      showToast('Lp toegevoegd!', 'success');
       navigate(`/platen/${newId}`);
     } catch (err) {
       console.error('RecordAdd: failed to add record', err);
@@ -114,9 +114,9 @@ export default function RecordAdd() {
           style={buttonStyle('ghost')}
           onClick={() => navigate('/platen')}
         >
-          ← Terug naar platen
+          ← Terug naar lp's
         </button>
-        <h1 style={pageTitleStyle}>Plaat toevoegen</h1>
+        <h1 style={pageTitleStyle}>Lp toevoegen</h1>
       </div>
       <div style={cardStyle}>
         <RecordForm

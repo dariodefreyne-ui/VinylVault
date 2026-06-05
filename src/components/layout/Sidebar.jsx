@@ -161,11 +161,12 @@ export default function Sidebar({ mobileOpen, onClose }) {
         </div>
 
         {/* Nav groups */}
-        <nav style={{ flex: 1, padding: '8px' }}>
+        {/* Op mobiel: sluit de overlay zodra op een item geklikt wordt. */}
+        <nav style={{ flex: 1, padding: '8px' }} onClick={onClose}>
           {/* Groep 1 — Collectie */}
           <GroupLabel>Collectie</GroupLabel>
           <NavItem to='/' end icon='home' label='Home' />
-          <NavItem to='/platen' icon='disc' label='Alle Platen' />
+          <NavItem to='/platen' icon='disc' label="Alle Lp's" />
           <NavItem to='/wishlist' icon='heart' label='Wishlist' />
           <NavItem to='/statistieken' icon='chart' label='Statistieken' />
           <NavItem to='/profiel' icon='user' label='Profiel' />
@@ -174,7 +175,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
           {isBeheerder(role) && (
             <>
               <GroupLabel>Beheer</GroupLabel>
-              <NavItem to='/platen/nieuw' icon='plus' label='Plaat toevoegen' />
+              <NavItem to='/platen/nieuw' icon='plus' label='Lp toevoegen' />
             </>
           )}
 

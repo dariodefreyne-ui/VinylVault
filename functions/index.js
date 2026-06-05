@@ -200,14 +200,16 @@ exports.lookupRelease = onCall(async (request) => {
 
   const params = { barcode, catalogNumber, query };
   const token = process.env.DISCOGS_TOKEN;
+  // Waarop is uiteindelijk gezocht (in deze prioriteitsvolgorde).
+  const matchedBy = barcode ? 'barcode' : catalogNumber ? 'catalogusnummer' : 'artiest + titel';
 
   try {
     if (token) {
       const discogs = await lookupDiscogs(params, token);
-      if (discogs) return { found: true, result: discogs };
+      if (discogs) return { found: true, result: { ...discogs, matchedBy } };
     }
     const mb = await lookupMusicBrainz(params);
-    if (mb) return { found: true, result: mb };
+    if (mb) return { found: true, result: { ...mb, matchedBy } };
     return { found: false };
   } catch (err) {
     console.error('lookupRelease error:', err.message);
@@ -215,7 +217,7 @@ exports.lookupRelease = onCall(async (request) => {
     if (token) {
       try {
         const mb = await lookupMusicBrainz(params);
-        if (mb) return { found: true, result: mb };
+        if (mb) return { found: true, result: { ...mb, matchedBy } };
       } catch (err2) {
         console.error('lookupRelease MusicBrainz fallback error:', err2.message);
       }
