@@ -9,7 +9,8 @@ import { useToast } from '../components/ui/Toast.jsx';
 import { isBeheerder } from '../utils/roles.js';
 import DetailModal from '../components/ui/DetailModal.jsx';
 import RecordForm from '../components/records/RecordForm.jsx';
-import { colors, radius, buttonStyle, badgeStyle, chipStyle } from '../styles/tokens.js';
+import Icon from '../components/ui/Icon.jsx';
+import { colors, radius, buttonStyle, badgeStyle, chipStyle, ownerColor } from '../styles/tokens.js';
 
 async function uploadFile(file, path) {
   const storageRef = ref(storage, path);
@@ -259,7 +260,7 @@ export default function RecordDetail() {
     );
   }
 
-  const ownerColor = record.owner === 'Papa' ? 'blue' : 'orange';
+  const ownerBadge = ownerColor(record.owner);
   const sublineParts = [
     record.year,
     record.format,
@@ -314,13 +315,15 @@ export default function RecordDetail() {
         {record.coverImageUrl ? (
           <img src={record.coverImageUrl} alt={record.title} style={coverStyle} />
         ) : (
-          <div style={coverPlaceholderStyle}>🎵</div>
+          <div style={{ ...coverPlaceholderStyle, color: colors.brand }}>
+            <Icon name="disc" size={86} strokeWidth={1.2} />
+          </div>
         )}
         <div style={{ flex: 1 }}>
           <h1 style={artistStyle}>{record.artist}</h1>
           <h2 style={albumTitleStyle}>{record.title}</h2>
           <div style={{ marginBottom: '12px' }}>
-            <span style={badgeStyle(ownerColor)}>{record.owner}</span>
+            <span style={badgeStyle(ownerBadge)}>{record.owner}</span>
           </div>
           {sublineParts.length > 0 && (
             <div style={sublineStyle}>

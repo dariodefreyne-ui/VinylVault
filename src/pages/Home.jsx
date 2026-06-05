@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { isOwnRecord } from '../utils/owners.js';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import RecordCard from '../components/records/RecordCard.jsx';
+import Icon from '../components/ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 export default function Home() {
@@ -173,7 +174,7 @@ export default function Home() {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="vv-in">
       {/* Page header */}
       <div
         style={{
@@ -204,7 +205,9 @@ export default function Home() {
       {/* Search bar */}
       <div style={searchWrapStyle}>
         <div style={searchInnerStyle}>
-          <span style={{ fontSize: '18px', color: colors.textSecondary }}>🔍</span>
+          <span style={{ color: colors.textSecondary, display: 'flex' }}>
+            <Icon name="search" size={18} />
+          </span>
           <input
             ref={searchRef}
             style={searchInputStyle}
@@ -264,7 +267,7 @@ export default function Home() {
               : 'Je hebt nog geen platen in je collectie. Voeg er een toe of bekijk alle collecties.'}
           </p>
         ) : (
-          <div style={gridStyle}>
+          <div style={gridStyle} className="vv-stagger">
             {recentRecords.map((record) => (
               <RecordCard key={record.id} record={record} />
             ))}

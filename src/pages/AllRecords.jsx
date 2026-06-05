@@ -4,6 +4,7 @@ import { useRecords } from '../hooks/useRecords.js';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { isBeheerder } from '../utils/roles.js';
 import RecordCard from '../components/records/RecordCard.jsx';
+import Icon from '../components/ui/Icon.jsx';
 import Chip from '../components/ui/Chip.jsx';
 import ImportModal from '../components/ImportModal.jsx';
 import { exportToExcel } from '../utils/importExcel.js';
@@ -223,7 +224,9 @@ export default function AllRecords() {
       <div style={actionBarStyle}>
         {/* Search */}
         <div style={searchInnerStyle}>
-          <span style={{ fontSize: '16px', color: colors.textSecondary }}>🔍</span>
+          <span style={{ color: colors.textSecondary, display: 'flex' }}>
+            <Icon name="search" size={17} />
+          </span>
           <input
             style={searchInputStyle}
             type="text"
@@ -316,7 +319,7 @@ export default function AllRecords() {
       ) : filtered.length === 0 ? (
         <p style={emptyStyle}>Geen platen gevonden.</p>
       ) : (
-        <div style={gridStyle}>
+        <div style={gridStyle} className="vv-stagger">
           {filtered.map((record) => (
             <RecordCard key={record.id} record={record} />
           ))}
