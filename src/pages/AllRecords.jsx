@@ -16,12 +16,6 @@ const SORT_OPTIONS = [
   { value: 'price_desc', label: 'Duurste eerst' },
 ];
 
-const OWNER_FILTERS = [
-  { value: '', label: 'Alles' },
-  { value: 'dario', label: 'Dario' },
-  { value: 'papa', label: 'Papa' },
-];
-
 function sortRecords(list, sortValue) {
   const sorted = [...list];
   switch (sortValue) {
@@ -56,15 +50,35 @@ export default function AllRecords() {
   const urlOwner = searchParams.get('owner') || '';
 
   const [search, setSearch] = useState(urlSearch);
-  const [ownerFilter, setOwnerFilter] = useState(urlOwner);
+  // Meerdere eigenaren tegelijk selecteerbaar (gemengde collectie). Lege selectie = alles.
+  const [selectedOwners, setSelectedOwners] = useState(urlOwner ? [urlOwner] : []);
   const [genreFilter, setGenreFilter] = useState('');
   const [sortValue, setSortValue] = useState('artist_asc');
 
   // Sync URL params on mount
   useEffect(() => {
     setSearch(urlSearch);
-    setOwnerFilter(urlOwner);
+    setSelectedOwners(urlOwner ? [urlOwner] : []);
   }, [urlSearch, urlOwner]);
+
+  // Unieke eigenaren uit de records (de labels die echt voorkomen).
+  const ownerList = useMemo(() => {
+    const set = new Set();
+    for (const r of records) {
+      if (r.owner && r.owner.trim()) set.add(r.owner.trim());
+    }
+    return [...set].sort((a, b) =>
+      a.localeCompare(b, 'nl', { sensitivity: 'base' })
+    );
+  }, [records]);
+
+  function toggleOwner(label) {
+    setSelectedOwners((prev) =>
+      prev.some((o) => o.toLowerCase() === label.toLowerCase())
+        ? prev.filter((o) => o.toLowerCase() !== label.toLowerCase())
+        : [...prev, label]
+    );
+  }
 
   // Unique genres from all records
   const allGenres = useMemo(() => {
@@ -90,10 +104,9 @@ export default function AllRecords() {
       );
     }
 
-    if (ownerFilter) {
-      list = list.filter(
-        (r) => (r.owner || '').toLowerCase() === ownerFilter.toLowerCase()
-      );
+    if (selectedOwners.length > 0) {
+      const set = new Set(selectedOwners.map((o) => o.toLowerCase()));
+      list = list.filter((r) => set.has((r.owner || '').toLowerCase()));
     }
 
     if (genreFilter) {
@@ -103,7 +116,7 @@ export default function AllRecords() {
     }
 
     return sortRecords(list, sortValue);
-  }, [records, search, ownerFilter, genreFilter, sortValue]);
+  }, [records, search, selectedOwners, genreFilter, sortValue]);
 
   // Stats for filtered list
   const filteredValue = filtered.reduce(
@@ -220,14 +233,21 @@ export default function AllRecords() {
           />
         </div>
 
-        {/* Owner filter chips */}
+        {/* Owner filter chips — meerdere tegelijk = gemengde collectie */}
         <div style={chipRowStyle}>
-          {OWNER_FILTERS.map((o) => (
+          <Chip
+            label="Alles"
+            active={selectedOwners.length === 0}
+            onClick={() => setSelectedOwners([])}
+          />
+          {ownerList.map((label) => (
             <Chip
-              key={o.value}
-              label={o.label}
-              active={ownerFilter === o.value}
-              onClick={() => setOwnerFilter(o.value)}
+              key={label}
+              label={label}
+              active={selectedOwners.some(
+                (o) => o.toLowerCase() === label.toLowerCase()
+              )}
+              onClick={() => toggleOwner(label)}
             />
           ))}
         </div>
