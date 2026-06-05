@@ -55,21 +55,21 @@ function computeTop10(records, ownerFilter) {
     .slice(0, 10);
 }
 
+// Dynamisch: één segment per eigenaar die in de records voorkomt.
 function computeOwnerSplit(records) {
-  let dario = 0;
-  let papa = 0;
+  const map = new Map(); // lower -> { name, value }
   for (const r of records) {
-    const qty = Number(r.quantity) || 1;
-    const price = parseFloat(r.purchasePrice) || 0;
-    const val = price * qty;
-    const owner = (r.owner || '').toLowerCase();
-    if (owner === 'dario') dario += val;
-    else if (owner === 'papa') papa += val;
+    const label = (r.owner || '').trim();
+    if (!label) continue;
+    const key = label.toLowerCase();
+    const val = (parseFloat(r.purchasePrice) || 0) * (Number(r.quantity) || 1);
+    if (!map.has(key)) map.set(key, { name: label, value: 0 });
+    map.get(key).value += val;
   }
-  return [
-    { name: 'Dario', value: parseFloat(dario.toFixed(2)) },
-    { name: 'Papa', value: parseFloat(papa.toFixed(2)) },
-  ];
+  return [...map.values()]
+    .map((o) => ({ name: o.name, value: parseFloat(o.value.toFixed(2)) }))
+    .filter((o) => o.value > 0)
+    .sort((a, b) => b.value - a.value);
 }
 
 function computeMonthlyLine(records) {
@@ -110,7 +110,13 @@ export default function ValueChart({ records, ownerFilter }) {
   const ownerSplit = computeOwnerSplit(records);
   const monthly = computeMonthlyLine(records);
 
-  const PIE_COLORS = [colors.accentBlue, colors.accentOrange];
+  const PIE_COLORS = [
+    colors.brand,
+    colors.accentBlue,
+    colors.accentGreen,
+    colors.accentRed,
+    colors.accentOrange,
+  ];
 
   const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.04) return null;
@@ -166,9 +172,10 @@ export default function ValueChart({ records, ownerFilter }) {
         </ResponsiveContainer>
       </div>
 
-      {/* Chart 2 — Dario vs Papa */}
+      {/* Chart 2 — Waarde per eigenaar (dynamisch) */}
+      {ownerSplit.length > 0 && (
       <div>
-        <div style={sectionHeadingStyle}>Dario vs Papa (totale waarde)</div>
+        <div style={sectionHeadingStyle}>Waarde per eigenaar</div>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
@@ -198,6 +205,7 @@ export default function ValueChart({ records, ownerFilter }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
+      )}
 
       {/* Chart 3 — Aankopen per maand */}
       <div>

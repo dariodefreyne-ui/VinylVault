@@ -268,7 +268,7 @@ export default function RecordDetail() {
   const formInitialData = {
     artist: record.artist || '',
     title: record.title || '',
-    owner: record.owner || 'Dario',
+    owner: record.owner || '',
     purchasePrice: record.purchasePrice != null ? record.purchasePrice : '',
     quantity: record.quantity != null ? record.quantity : 1,
     purchaseDate: record.purchaseDate || '',

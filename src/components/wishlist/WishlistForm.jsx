@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
+import { useAuth } from '../../hooks/useAuth.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 const inputStyle = {
@@ -82,9 +83,11 @@ function Select({ value, onChange, children, ...rest }) {
 
 export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loading }) {
   const ownerOptions = useOwnerOptions();
+  const { userDoc } = useAuth();
+  const myOwnerLabel = userDoc?.collectionLabel || userDoc?.displayName || '';
   const [artist, setArtist] = useState(initialData.artist || '');
   const [title, setTitle] = useState(initialData.title || '');
-  const [owner, setOwner] = useState(initialData.owner || 'Dario');
+  const [owner, setOwner] = useState(initialData.owner || myOwnerLabel);
   const [priority, setPriority] = useState(initialData.priority || 'normaal');
   const [targetPrice, setTargetPrice] = useState(
     initialData.targetPrice != null ? String(initialData.targetPrice) : ''

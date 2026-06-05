@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRecords } from '../hooks/useRecords.js';
+import { useAuth } from '../hooks/useAuth.jsx';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import Chip from '../components/ui/Chip.jsx';
 import ArtistPivotTable from '../components/stats/ArtistPivotTable.jsx';
@@ -30,13 +31,7 @@ const sectionTitleStyle = {
   marginBottom: '14px',
 };
 
-const ownerFilters = [
-  { key: 'alles', label: 'Alles' },
-  { key: 'dario', label: 'Dario De Freyne' },
-  { key: 'papa', label: 'Papa' },
-];
-
-// Een lp telt niet mee in de aankoopwaarde als hij cadeau was (of papa's lp is).
+// Een lp telt niet mee in de aankoopwaarde als hij cadeau was.
 const GIFT_WORDS = ['cadeau', 'kado', 'geschenk', 'gekregen', 'gift', 'present', 'cadeautje'];
 function isGift(notes) {
   const n = (notes || '').toLowerCase();
@@ -52,32 +47,17 @@ function computeStats(records, ownerFilter) {
         );
 
   let totalQuantity = 0;
-  let totalValue = 0;       // effectieve totale waarde (alles)
-  let purchaseValue = 0;    // wat je effectief betaald hebt (geen cadeaus, geen papa)
+  let totalValue = 0;       // effectieve totale waarde
+  let purchaseValue = 0;    // wat je effectief betaald hebt (cadeaus tellen niet mee)
   const artists = new Set();
-
-  let darioValue = 0;
-  let papaValue = 0;
 
   for (const r of filtered) {
     const qty = Number(r.quantity) || 1;
     const price = parseFloat(r.purchasePrice) || 0;
     totalQuantity += qty;
     totalValue += price * qty;
-    const owner = (r.owner || '').toLowerCase();
-    if (owner !== 'papa' && !isGift(r.notes)) {
-      purchaseValue += price * qty;
-    }
+    if (!isGift(r.notes)) purchaseValue += price * qty;
     if (r.artist) artists.add(r.artist);
-  }
-
-  for (const r of records) {
-    const qty = Number(r.quantity) || 1;
-    const price = parseFloat(r.purchasePrice) || 0;
-    const val = price * qty;
-    const owner = (r.owner || '').toLowerCase();
-    if (owner === 'dario') darioValue += val;
-    else if (owner === 'papa') papaValue += val;
   }
 
   return {
@@ -85,8 +65,6 @@ function computeStats(records, ownerFilter) {
     totalValue,
     purchaseValue,
     uniqueArtists: artists.size,
-    darioValue,
-    papaValue,
   };
 }
 
@@ -113,7 +91,32 @@ function computeGenres(records, ownerFilter) {
 
 export default function Statistics() {
   const { records, loading } = useRecords();
+  const { userDoc } = useAuth();
   const [ownerFilter, setOwnerFilter] = useState('alles');
+
+  // Eigenaar van de huidige gebruiker (om 'jouw' collectie te markeren).
+  const myLabel = (userDoc?.collectionLabel || userDoc?.displayName || '').toLowerCase();
+
+  // Dynamische eigenaar-filters, afgeleid uit de records (geen hardcoded namen).
+  const ownerFilters = useMemo(() => {
+    const byKey = new Map();
+    for (const r of records) {
+      const label = (r.owner || '').trim();
+      if (!label) continue;
+      const key = label.toLowerCase();
+      if (!byKey.has(key)) byKey.set(key, label);
+    }
+    const sorted = [...byKey.entries()].sort((a, b) =>
+      a[1].localeCompare(b[1], 'nl', { sensitivity: 'base' })
+    );
+    return [
+      { key: 'alles', label: 'Alles' },
+      ...sorted.map(([key, label]) => ({
+        key,
+        label: key === myLabel ? `${label} (jij)` : label,
+      })),
+    ];
+  }, [records, myLabel]);
 
   const filteredRecords =
     ownerFilter === 'alles'
@@ -158,16 +161,6 @@ export default function Statistics() {
                 color="orange"
               />
               <KpiTegel label="Unieke artiesten" value={stats.uniqueArtists} />
-              <KpiTegel
-                label="Dario waarde"
-                value={`€${stats.darioValue.toFixed(2)}`}
-                color="blue"
-              />
-              <KpiTegel
-                label="Papa waarde"
-                value={`€${stats.papaValue.toFixed(2)}`}
-                color="orange"
-              />
             </div>
           </div>
 

@@ -15,12 +15,6 @@ const STATUS_FILTERS = [
   { value: 'gekocht', label: 'Gekocht' },
 ];
 
-const OWNER_FILTERS = [
-  { value: 'alles', label: 'Alles' },
-  { value: 'dario', label: 'Dario' },
-  { value: 'papa', label: 'Papa' },
-];
-
 export default function Wishlist() {
   const { items, loading, addWishlistItem, updateWishlistItem } = useWishlist();
   const { role } = useAuth();
@@ -36,6 +30,21 @@ export default function Wishlist() {
     () => items.filter((i) => i.status === 'actief').length,
     [items]
   );
+
+  // Dynamische eigenaar-filters, afgeleid uit de wishlist-items (geen hardcoded namen).
+  const ownerFilters = useMemo(() => {
+    const byKey = new Map();
+    for (const i of items) {
+      const label = (i.owner || '').trim();
+      if (label && !byKey.has(label.toLowerCase())) byKey.set(label.toLowerCase(), label);
+    }
+    return [
+      { value: 'alles', label: 'Alles' },
+      ...[...byKey.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1], 'nl', { sensitivity: 'base' }))
+        .map(([value, label]) => ({ value, label })),
+    ];
+  }, [items]);
 
   const filtered = useMemo(() => {
     let list = items;
@@ -166,7 +175,7 @@ export default function Wishlist() {
 
         {/* Owner filter */}
         <div style={chipRowStyle}>
-          {OWNER_FILTERS.map((f) => (
+          {ownerFilters.map((f) => (
             <Chip
               key={f.value}
               label={f.label}

@@ -21,21 +21,12 @@ function generateSearchKeywords(artist, title) {
 
 function computeKpis(records) {
   let totalValue = 0;
-  let darioCount = 0;
-  let papaCount = 0;
-
   for (const r of records) {
     if (r.purchasePrice) totalValue += parseFloat(r.purchasePrice) || 0;
-    const owner = (r.owner || '').toLowerCase();
-    if (owner === 'dario') darioCount += 1;
-    else if (owner === 'papa') papaCount += 1;
   }
-
   return {
     totalRecords: records.length,
     totalValue,
-    darioCount,
-    papaCount,
   };
 }
 
