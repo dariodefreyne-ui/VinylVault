@@ -22,14 +22,22 @@ Nieuwe gebruikers krijgen bij registratie automatisch `collectionLabel` (= weerg
 
 ### Discogs token configureren (optioneel)
 
-Zonder token werkt de lookup via MusicBrainz. Voor Discogs-resultaten:
+Zonder token werkt de lookup via MusicBrainz, maar dat heeft een **zwakke
+barcode-dekking** (vaak "geen metadata gevonden"). Voor betrouwbare resultaten op
+barcode/catalogusnummer heb je een Discogs-token nodig:
 
 1. Maak een persoonlijk token aan op <https://www.discogs.com/settings/developers>.
-2. Voeg het toe aan de functions-omgeving, bv. via `functions/.env` (gitignored):
-   ```
-   DISCOGS_TOKEN=jouw_token_hier
-   ```
-3. Deploy de functions: `npm run functions:deploy`.
+2. **Aanbevolen (via CI):** voeg in GitHub → Settings → Secrets and variables → Actions
+   een secret **`DISCOGS_TOKEN`** toe met je token. De deploy-workflow schrijft dit
+   automatisch naar `functions/.env` vóór de functions-deploy.
+3. Re-deploy (push naar `main` of run de workflow handmatig).
+
+**Lokaal deployen** kan ook: zet `DISCOGS_TOKEN=jouw_token_hier` in `functions/.env`
+(gitignored) en draai `npm run functions:deploy`.
+
+> De lookup doet automatisch twee stappen: zoeken op barcode → de gevonden release
+> ophalen met volledige details (artiest, titel, label, jaar, genres, cover, tracklist).
+> Je hoeft dus niets handmatig "aan te klikken".
 
 -----
 
