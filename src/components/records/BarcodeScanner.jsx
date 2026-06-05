@@ -2,80 +2,92 @@ import { useEffect, useRef, useState } from 'react';
 import Icon from '../ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
-// Gebruikt de browser-native BarcodeDetector API (geen externe dependency).
-// Beschikbaar op o.a. Android Chrome. Niet ondersteund op iOS Safari — daar
-// blijft handmatige invoer beschikbaar.
-
-const FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e'];
+// Barcode-scanner op basis van ZXing (@zxing/browser). Werkt cross-device —
+// óók op iOS Safari en desktop Firefox, in tegenstelling tot de browser-native
+// BarcodeDetector API. De library wordt lazy geïmporteerd zodat ze niet in de
+// initiële bundle zit; ze laadt pas wanneer de scanner geopend wordt.
+//
+// Vereist HTTPS voor cameratoegang (productie draait op Firebase Hosting = HTTPS).
 
 export default function BarcodeScanner({ open, onClose, onResult }) {
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const rafRef = useRef(null);
+  const controlsRef = useRef(null);
+  const [status, setStatus] = useState('loading'); // 'loading' | 'scanning' | 'error'
   const [error, setError] = useState('');
-  const supported = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
   useEffect(() => {
     if (!open) return undefined;
-    if (!supported) {
-      setError('Barcode-scannen wordt niet ondersteund op dit toestel. Voer de barcode handmatig in.');
-      return undefined;
-    }
 
     let cancelled = false;
-    const detector = new window.BarcodeDetector({ formats: FORMATS });
+    setStatus('loading');
+    setError('');
 
     async function start() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-        });
+        const [{ BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] =
+          await Promise.all([import('@zxing/browser'), import('@zxing/library')]);
+
+        if (cancelled) return;
+
+        // Beperk tot retail-barcodes (EAN/UPC) voor snelheid en nauwkeurigheid.
+        const hints = new Map();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+        ]);
+
+        const reader = new BrowserMultiFormatReader(hints);
+        const constraints = { video: { facingMode: { ideal: 'environment' } } };
+
+        const controls = await reader.decodeFromConstraints(
+          constraints,
+          videoRef.current,
+          (result, err, ctrls) => {
+            if (cancelled) return;
+            if (result) {
+              const text = result.getText();
+              if (text) {
+                ctrls.stop();
+                onResult(text);
+              }
+            }
+            // err is normaal per frame (geen barcode gevonden) — negeren.
+          }
+        );
+
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+          controls.stop();
           return;
         }
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-        scan();
+        controlsRef.current = controls;
+        setStatus('scanning');
       } catch (err) {
-        console.error('BarcodeScanner: camera error', err);
-        setError('Geen toegang tot de camera. Controleer de permissies of voer de barcode handmatig in.');
-      }
-    }
-
-    async function scan() {
-      if (cancelled || !videoRef.current) return;
-      try {
-        const codes = await detector.detect(videoRef.current);
-        if (codes && codes.length > 0) {
-          const value = codes[0].rawValue;
-          if (value) {
-            stop();
-            onResult(value);
-            return;
-          }
-        }
-      } catch {
-        // detect() faalt soms tussen frames — gewoon doorgaan
-      }
-      rafRef.current = requestAnimationFrame(scan);
-    }
-
-    function stop() {
-      cancelled = true;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
+        console.error('BarcodeScanner: kon scanner niet starten', err);
+        if (cancelled) return;
+        const name = err?.name || '';
+        setError(
+          name === 'NotAllowedError'
+            ? 'Geen toegang tot de camera. Geef cameratoestemming en probeer opnieuw, of voer de barcode handmatig in.'
+            : name === 'NotFoundError'
+            ? 'Geen camera gevonden op dit toestel. Voer de barcode handmatig in.'
+            : 'Kon de scanner niet starten. Voer de barcode handmatig in.'
+        );
+        setStatus('error');
       }
     }
 
     start();
-    return () => stop();
-  }, [open, supported, onResult]);
+
+    return () => {
+      cancelled = true;
+      if (controlsRef.current) {
+        controlsRef.current.stop();
+        controlsRef.current = null;
+      }
+    };
+  }, [open, onResult]);
 
   if (!open) return null;
 
@@ -102,30 +114,58 @@ export default function BarcodeScanner({ open, onClose, onResult }) {
   return (
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-label="Barcode scannen">
       <div style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '16px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: '16px',
+            fontWeight: 700,
+            color: colors.textPrimary,
+            marginBottom: '12px',
+          }}
+        >
           <Icon name="camera" size={18} /> Scan barcode
         </div>
-        {error ? (
+
+        {status === 'error' ? (
           <p style={{ fontSize: '14px', color: colors.accentRed, lineHeight: 1.5 }}>{error}</p>
         ) : (
           <>
-            <video
-              ref={videoRef}
-              style={{
-                width: '100%',
-                borderRadius: radius.md,
-                backgroundColor: '#000',
-                aspectRatio: '4 / 3',
-                objectFit: 'cover',
-              }}
-              muted
-              playsInline
-            />
+            <div style={{ position: 'relative' }}>
+              <video
+                ref={videoRef}
+                style={{
+                  width: '100%',
+                  borderRadius: radius.md,
+                  backgroundColor: '#000',
+                  aspectRatio: '4 / 3',
+                  objectFit: 'cover',
+                }}
+                muted
+                playsInline
+              />
+              {/* Richtkader */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '22% 12%',
+                  border: `2px solid ${colors.brand}`,
+                  borderRadius: radius.sm,
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.25)',
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
             <p style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '10px' }}>
-              Houd de barcode voor de camera.
+              {status === 'loading'
+                ? 'Scanner laden…'
+                : 'Houd de barcode in het kader.'}
             </p>
           </>
         )}
+
         <button
           style={{ ...buttonStyle('secondary'), width: '100%', justifyContent: 'center', marginTop: '12px' }}
           onClick={onClose}
