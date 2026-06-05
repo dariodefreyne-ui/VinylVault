@@ -7,15 +7,19 @@ function getXLSX() {
 }
 
 export const COLUMN_MAPPINGS = {
-  artist: ['artist', 'artiest', 'artist name', 'band'],
+  artist: ['artist', 'artiest', 'artist name', 'band', 'uitvoerder'],
   title: ['title', 'titel', 'album', 'albumtitel'],
-  owner: ['owner', 'eigenaar', 'wie'],
-  purchasePrice: ['price', 'prijs', 'aankoopprijs', 'cost'],
-  label: ['label'],
-  year: ['year', 'jaar', 'release year'],
+  owner: ['owner', 'eigenaar', 'wie', 'username', 'gebruiker'],
+  purchasePrice: ['price', 'prijs', 'aankoopprijs', 'cost', 'waarde'],
+  label: ['label', 'platenlabel'],
+  year: ['year', 'jaar', 'release year', 'releasejaar'],
+  releaseYear: ['uitgavejaar', 'persing', 'pressing', 'reissue', 'heruitgave'],
+  country: ['country', 'land'],
   format: ['format', 'formaat', 'type'],
-  barcode: ['barcode', 'ean'],
-  notes: ['notes', 'notities', 'opmerkingen'],
+  catalogNumber: ['catalog', 'catalogus', 'catalogusnummer', 'catalog number', 'catno', 'cat no', 'cat. no', 'cat nr', 'catalognumber', 'labelnummer'],
+  barcode: ['barcode', 'ean', 'upc', 'streepjescode', 'bar code', 'ean13', 'ean-13'],
+  condition: ['condition', 'conditie', 'staat'],
+  notes: ['notes', 'notities', 'opmerkingen', 'commentaar'],
 };
 
 /**
@@ -99,6 +103,21 @@ export function sanitizeRow(row, mapping) {
 
   const format = get('format');
   if (format) result.format = format;
+
+  const releaseYearRaw = get('releaseYear');
+  if (releaseYearRaw !== undefined) {
+    const parsed = parseInt(releaseYearRaw, 10);
+    if (!isNaN(parsed)) result.releaseYear = parsed;
+  }
+
+  const country = get('country');
+  if (country) result.country = country;
+
+  const catalogNumber = get('catalogNumber');
+  if (catalogNumber) result.catalogNumber = catalogNumber;
+
+  const condition = get('condition');
+  if (condition) result.condition = condition;
 
   const barcode = get('barcode');
   if (barcode) result.barcode = barcode;

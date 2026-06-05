@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   writeBatch,
   doc,
@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import { parseExcelFile, sanitizeRow, autoDetectMapping, exportToExcel, COLUMN_MAPPINGS } from '../utils/importExcel.js';
-import { invalidateRecordsCache } from '../hooks/useRecords.js';
+import { useRecords, invalidateRecordsCache } from '../hooks/useRecords.js';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from './ui/Toast.jsx';
 import DetailModal from './ui/DetailModal.jsx';
@@ -20,12 +20,25 @@ const FIELD_LABELS = {
   purchasePrice: 'Aankoopprijs',
   label: 'Label',
   year: 'Jaar',
+  releaseYear: 'Uitgavejaar',
+  country: 'Land',
   format: 'Format',
+  catalogNumber: 'Catalogusnummer',
   barcode: 'Barcode',
+  condition: 'Conditie',
   notes: 'Notities',
 };
 
 const REQUIRED_FIELDS = ['artist', 'owner'];
+
+// Sleutel om dubbele lp's te herkennen bij heropladen: barcode indien aanwezig,
+// anders artiest+titel+eigenaar (genormaliseerd).
+export function recordKey(r) {
+  const bc = (r.barcode != null ? String(r.barcode) : '').trim();
+  if (bc) return 'bc:' + bc;
+  const norm = (v) => (v != null ? String(v) : '').trim().toLowerCase();
+  return 'at:' + norm(r.artist) + '|' + norm(r.title) + '|' + norm(r.owner);
+}
 
 // ---------------------------------------------------------------------------
 // Step indicator
@@ -353,21 +366,26 @@ function StepMapping({ headers, initialMapping, onNext, onBack }) {
 // ---------------------------------------------------------------------------
 // Step 3 — Preview + validatie
 // ---------------------------------------------------------------------------
-function StepPreview({ rows, mapping, onNext, onBack }) {
+function StepPreview({ rows, mapping, existingKeys, onNext, onBack }) {
   const [skipErrors, setSkipErrors] = useState(true);
+  const [skipExisting, setSkipExisting] = useState(true);
 
   const sanitized = rows.map((raw) => {
     const record = sanitizeRow(raw, mapping);
     const hasError = !record.artist || !record.owner;
-    return { record, hasError };
+    const isDuplicate = !hasError && existingKeys.has(recordKey(record));
+    return { record, hasError, isDuplicate };
   });
 
   const totalRows = sanitized.length;
   const errorCount = sanitized.filter((r) => r.hasError).length;
-  const validCount = totalRows - errorCount;
-  const importableCount = skipErrors ? validCount : totalRows;
+  const dupCount = sanitized.filter((r) => r.isDuplicate).length;
+  const validCount = sanitized.filter(
+    (r) => !r.hasError && !(skipExisting && r.isDuplicate)
+  ).length;
+  const importableCount = skipErrors ? validCount : totalRows - (skipExisting ? dupCount : 0);
 
-  const VISIBLE_FIELDS = ['artist', 'title', 'owner', 'purchasePrice', 'label', 'year', 'format'];
+  const VISIBLE_FIELDS = ['artist', 'title', 'owner', 'year', 'catalogNumber', 'barcode'];
 
   const thStyle = {
     padding: '6px 8px',
@@ -408,6 +426,7 @@ function StepPreview({ rows, mapping, onNext, onBack }) {
     <div>
       <p style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '4px' }}>
         {totalRows} rijen &middot; {errorCount} fout{errorCount !== 1 ? 'en' : ''}
+        {dupCount > 0 && <> &middot; {dupCount} reeds in collectie</>}
       </p>
 
       <label style={checkboxLabelStyle}>
@@ -417,6 +436,15 @@ function StepPreview({ rows, mapping, onNext, onBack }) {
           onChange={(e) => setSkipErrors(e.target.checked)}
         />
         Sla foute rijen over
+      </label>
+
+      <label style={{ ...checkboxLabelStyle, marginTop: '0' }}>
+        <input
+          type="checkbox"
+          checked={skipExisting}
+          onChange={(e) => setSkipExisting(e.target.checked)}
+        />
+        Sla lp's over die al in de collectie staan (op barcode of artiest+titel)
       </label>
 
       <div style={{
@@ -436,8 +464,9 @@ function StepPreview({ rows, mapping, onNext, onBack }) {
             </tr>
           </thead>
           <tbody>
-            {sanitized.map(({ record, hasError }, i) => {
+            {sanitized.map(({ record, hasError, isDuplicate }, i) => {
               if (skipErrors && hasError) return null;
+              if (skipExisting && isDuplicate) return null;
               return (
                 <tr key={i}>
                   <td style={{ ...tdStyle(hasError), color: hasError ? colors.accentRed : colors.accentGreen }}>
@@ -465,7 +494,7 @@ function StepPreview({ rows, mapping, onNext, onBack }) {
             opacity: importableCount === 0 ? 0.5 : 1,
             cursor: importableCount === 0 ? 'not-allowed' : 'pointer',
           }}
-          onClick={() => { if (importableCount > 0) onNext(sanitized, skipErrors); }}
+          onClick={() => { if (importableCount > 0) onNext(sanitized, skipErrors, skipExisting); }}
           disabled={importableCount === 0}
         >
           Importeer ({importableCount} rijen)
@@ -478,13 +507,13 @@ function StepPreview({ rows, mapping, onNext, onBack }) {
 // ---------------------------------------------------------------------------
 // Step 4 — Importeren
 // ---------------------------------------------------------------------------
-function StepImporting({ sanitizedRows, skipErrors, user, onDone, onError }) {
+function StepImporting({ sanitizedRows, skipErrors, skipExisting, user, onDone, onError }) {
   const [done, setDone] = useState(0);
   const [started, setStarted] = useState(false);
 
-  const rowsToImport = skipErrors
-    ? sanitizedRows.filter((r) => !r.hasError)
-    : sanitizedRows;
+  const rowsToImport = sanitizedRows.filter(
+    (r) => !(skipErrors && r.hasError) && !(skipExisting && r.isDuplicate)
+  );
 
   const total = rowsToImport.length;
 
@@ -573,7 +602,13 @@ function StepImporting({ sanitizedRows, skipErrors, user, onDone, onError }) {
 // ---------------------------------------------------------------------------
 export default function ImportModal({ open, onClose }) {
   const { user } = useAuth();
+  const { records } = useRecords();
   const showToast = useToast();
+
+  const existingKeys = useMemo(
+    () => new Set(records.map((r) => recordKey(r))),
+    [records]
+  );
 
   const [step, setStep] = useState(1);
   const [parsedRows, setParsedRows] = useState(null);
@@ -581,6 +616,7 @@ export default function ImportModal({ open, onClose }) {
   const [mapping, setMapping] = useState({});
   const [sanitizedRows, setSanitizedRows] = useState(null);
   const [skipErrors, setSkipErrors] = useState(true);
+  const [skipExisting, setSkipExisting] = useState(true);
 
   function reset() {
     setStep(1);
@@ -609,9 +645,10 @@ export default function ImportModal({ open, onClose }) {
     setStep(3);
   }
 
-  function handlePreviewNext(rows, skip) {
+  function handlePreviewNext(rows, skip, skipDup) {
     setSanitizedRows(rows);
     setSkipErrors(skip);
+    setSkipExisting(skipDup);
     setStep(4);
   }
 
@@ -654,6 +691,7 @@ export default function ImportModal({ open, onClose }) {
         <StepPreview
           rows={parsedRows}
           mapping={mapping}
+          existingKeys={existingKeys}
           onNext={handlePreviewNext}
           onBack={() => setStep(2)}
         />
@@ -663,6 +701,7 @@ export default function ImportModal({ open, onClose }) {
         <StepImporting
           sanitizedRows={sanitizedRows}
           skipErrors={skipErrors}
+          skipExisting={skipExisting}
           user={user}
           onDone={handleImportDone}
           onError={handleImportError}
