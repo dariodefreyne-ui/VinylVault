@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { db } from '../firebase/config.js';
+import { invalidateRecordsCache } from '../hooks/useRecords.js';
 import { useAdmin } from '../hooks/useAdmin.js';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from '../components/ui/Toast.jsx';
@@ -68,6 +71,30 @@ export default function Admin() {
   const showToast = useToast();
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [wipeText, setWipeText] = useState('');
+  const [wiping, setWiping] = useState(false);
+
+  async function wipeAllRecords() {
+    setWiping(true);
+    try {
+      const snap = await getDocs(collection(db, 'records'));
+      const docs = snap.docs;
+      const CHUNK = 400;
+      for (let i = 0; i < docs.length; i += CHUNK) {
+        const batch = writeBatch(db);
+        docs.slice(i, i + CHUNK).forEach((d) => batch.delete(doc(db, 'records', d.id)));
+        await batch.commit();
+      }
+      invalidateRecordsCache();
+      setWipeText('');
+      showToast(`${docs.length} lp's verwijderd. Je kunt nu opnieuw importeren.`, 'success');
+    } catch (err) {
+      console.error('Admin: wipe records failed', err);
+      showToast('Fout bij verwijderen van lp\'s.', 'error');
+    } finally {
+      setWiping(false);
+    }
+  }
 
   const pendingCount = users.filter((u) => u.role === 'pending').length;
   const lidCount = users.filter((u) => u.role === 'lid').length;
@@ -172,6 +199,56 @@ export default function Admin() {
           >
             <Icon name="download" size={15} /> Importeer collectie
           </button>
+        </div>
+      )}
+
+      {/* Gevarenzone — alle lp's wissen (voor een schone herstart) */}
+      {isAdmin(role) && (
+        <div
+          style={{
+            marginTop: '36px',
+            border: `1px solid ${colors.accentRed}`,
+            borderRadius: radius.md,
+            padding: '20px',
+            backgroundColor: 'rgba(207,106,76,0.06)',
+          }}
+        >
+          <div style={{ fontSize: '15px', fontWeight: 700, color: colors.accentRed, marginBottom: '6px' }}>
+            Gevarenzone — alle lp's verwijderen
+          </div>
+          <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '14px', lineHeight: 1.6 }}>
+            Verwijdert <strong>alle</strong> lp's uit de collectie (gebruikers en instellingen
+            blijven). Handig om bij dubbele data schoon te herbeginnen en daarna je Excel
+            opnieuw te importeren. Dit kan niet ongedaan gemaakt worden. Typ <strong>VERWIJDER</strong>
+            om te bevestigen.
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              value={wipeText}
+              onChange={(e) => setWipeText(e.target.value)}
+              placeholder="VERWIJDER"
+              style={{
+                backgroundColor: colors.bgPrimary,
+                border: `1px solid ${colors.borderColor}`,
+                borderRadius: radius.sm,
+                padding: '8px 12px',
+                color: colors.textPrimary,
+                fontSize: '14px',
+                outline: 'none',
+              }}
+            />
+            <button
+              style={{
+                ...buttonStyle('danger'),
+                opacity: wipeText === 'VERWIJDER' && !wiping ? 1 : 0.5,
+                cursor: wipeText === 'VERWIJDER' && !wiping ? 'pointer' : 'not-allowed',
+              }}
+              onClick={wipeAllRecords}
+              disabled={wipeText !== 'VERWIJDER' || wiping}
+            >
+              {wiping ? 'Bezig met verwijderen…' : 'Verwijder alle lp\'s'}
+            </button>
+          </div>
         </div>
       )}
 
