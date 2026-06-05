@@ -48,6 +48,7 @@ const USER_AGENT = 'VinylVault/1.0 (https://vinylvault-7b7f5.web.app)';
 
 async function fetchJson(url, headers = {}) {
   const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT, ...headers } });
+  if (res.status === 404) return null; // graceful: niet crashen op ontbrekende releases
   if (!res.ok) throw new Error(`HTTP ${res.status} voor ${url}`);
   return res.json();
 }
@@ -82,7 +83,6 @@ function normalizeDiscogs(rel, masterYear) {
     (i) => (i.type || '').toLowerCase() === 'barcode'
   );
   const firstFormat = (rel.formats || [])[0] || {};
-  // Persingsjaar van DEZE release (heruitgave); origineel jaar uit de master.
   const releaseYear = yearFromDate(rel.released) || rel.year || null;
   return {
     source: 'discogs',
@@ -111,27 +111,37 @@ async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
   else return null;
 
   const search = await fetchJson(`https://api.discogs.com/database/search?${params}`);
-  const first = (search.results || []).find((r) => r.resource_url) || (search.results || [])[0];
-  if (!first) return null;
+  if (!search) return null;
 
-  if (first.resource_url) {
-    const sep = first.resource_url.includes('?') ? '&' : '?';
-    const rel = await fetchJson(`${first.resource_url}${sep}token=${encodeURIComponent(token)}`);
-    // Origineel uitgavejaar ophalen uit de master (om reissues te onderscheiden).
+  const results = (search.results || []).filter((r) => r.resource_url);
+  if (!results.length) return null;
+
+  // Probeer elk zoekresultaat tot één werkt (overgeslagen 404's)
+  for (const candidate of results) {
+    const sep = candidate.resource_url.includes('?') ? '&' : '?';
+    const rel = await fetchJson(`${candidate.resource_url}${sep}token=${encodeURIComponent(token)}`);
+    if (!rel) {
+      console.log(`lookupDiscogs: 404 op ${candidate.resource_url}, volgende proberen`);
+      continue;
+    }
+
     let masterYear = null;
     if (rel.master_id) {
       try {
         const master = await fetchJson(
           `https://api.discogs.com/masters/${rel.master_id}?token=${encodeURIComponent(token)}`
         );
-        masterYear = master.year || null;
+        masterYear = master?.year || null;
       } catch {
         // master niet ophaalbaar — geen probleem, release-jaar wordt gebruikt
       }
     }
     return normalizeDiscogs(rel, masterYear);
   }
-  // Minimale fallback op het zoekresultaat zelf
+
+  // Alle resource_urls waren 404 — minimale fallback op zoekresultaat zelf
+  const first = results[0];
+  console.log('lookupDiscogs: alle resource_urls faalden, fallback op zoekresultaat');
   return normalizeDiscogs({
     title: first.title,
     year: first.year,
@@ -141,7 +151,7 @@ async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
     labels: first.label ? [{ name: first.label[0], catno: first.catno }] : [],
     formats: first.format ? [{ descriptions: first.format }] : [],
     images: first.cover_image ? [{ uri: first.cover_image }] : [],
-  });
+  }, null);
 }
 
 async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
@@ -154,12 +164,15 @@ async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
   const search = await fetchJson(
     `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(q)}&fmt=json&limit=5`
   );
+  if (!search) return null;
+
   const first = (search.releases || [])[0];
   if (!first) return null;
 
   const rel = await fetchJson(
     `https://musicbrainz.org/ws/2/release/${first.id}?inc=artist-credits+labels+recordings&fmt=json`
   );
+  if (!rel) return null;
 
   const artist = (rel['artist-credit'] || [])
     .map((c) => (typeof c === 'string' ? c : c.name + (c.joinphrase || '')))
@@ -200,7 +213,6 @@ exports.lookupRelease = onCall(async (request) => {
 
   const params = { barcode, catalogNumber, query };
   const token = process.env.DISCOGS_TOKEN;
-  // Waarop is uiteindelijk gezocht (in deze prioriteitsvolgorde).
   const matchedBy = barcode ? 'barcode' : catalogNumber ? 'catalogusnummer' : 'artiest + titel';
 
   try {
