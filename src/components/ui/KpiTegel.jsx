@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { colors, radius } from '../../styles/tokens.js';
+import { colors, radius, fonts, shadows } from '../../styles/tokens.js';
 
 const accentMap = {
   red: colors.accentRed,
@@ -13,28 +13,31 @@ export default function KpiTegel({ label, value, onClick, color }) {
 
   const cardStyle = {
     backgroundColor: hovered && onClick ? colors.bgHover : colors.bgCard,
-    border: `1px solid ${colors.borderColor}`,
+    border: `1px solid ${hovered && onClick ? colors.brand : colors.borderColor}`,
     borderRadius: radius.md,
-    padding: '16px 20px',
+    padding: '15px 20px',
     cursor: onClick ? 'pointer' : 'default',
-    transition: 'background-color 0.15s ease',
+    transition: 'background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease',
+    transform: hovered && onClick ? 'translateY(-2px)' : 'translateY(0)',
+    boxShadow: shadows.card,
     minWidth: '120px',
     flex: '1 1 0',
   };
 
   const labelStyle = {
-    fontSize: '12px',
+    fontSize: '11px',
     color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    marginBottom: '6px',
+    letterSpacing: '0.08em',
+    marginBottom: '8px',
   };
 
   const valueStyle = {
-    fontSize: '28px',
-    fontWeight: 700,
+    fontFamily: fonts.display,
+    fontSize: '32px',
+    fontWeight: 600,
     color: color && accentMap[color] ? accentMap[color] : colors.textPrimary,
-    lineHeight: 1.1,
+    lineHeight: 1.05,
   };
 
   return (

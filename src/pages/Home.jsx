@@ -2,39 +2,68 @@ import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecords } from '../hooks/useRecords.js';
 import { useWishlist } from '../hooks/useWishlist.js';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { isOwnRecord } from '../utils/owners.js';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import RecordCard from '../components/records/RecordCard.jsx';
-import { colors, radius } from '../styles/tokens.js';
+import Icon from '../components/ui/Icon.jsx';
+import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { records, loading, kpis } = useRecords();
+  const { records, loading } = useRecords();
   const { items: wishlistItems } = useWishlist();
+  const { user, userDoc } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const searchRef = useRef(null);
 
+  const uid = user?.uid;
+  // Val terug op displayName zodat legacy-gebruikers zonder collectionLabel hun
+  // records (owner: 'Dario'/'Papa') meteen als "van hen" herkend zien.
+  const collectionLabel = userDoc?.collectionLabel || userDoc?.displayName;
+  const displayName = userDoc?.displayName || 'collega-verzamelaar';
+
+  // Records die op de pagina getoond worden: eigen collectie of alles.
+  const scopedRecords = useMemo(() => {
+    if (showAll) return records;
+    return records.filter((r) => isOwnRecord(r, uid, collectionLabel));
+  }, [records, showAll, uid, collectionLabel]);
+
+  // KPI's afgeleid van de actieve scope.
+  const kpis = useMemo(() => {
+    let totalValue = 0;
+    for (const r of scopedRecords) {
+      totalValue += (parseFloat(r.purchasePrice) || 0) * (Number(r.quantity) || 1);
+    }
+    return { totalRecords: scopedRecords.length, totalValue };
+  }, [scopedRecords]);
+
   const recentRecords = useMemo(() =>
-    [...records]
+    [...scopedRecords]
       .sort((a, b) => {
         const da = a.dateAdded?.toDate?.() ?? new Date(a.dateAdded ?? 0);
         const db_ = b.dateAdded?.toDate?.() ?? new Date(b.dateAdded ?? 0);
         return db_ - da;
       })
       .slice(0, 5),
-    [records]
+    [scopedRecords]
   );
 
   const activeWishlistCount = useMemo(
-    () => wishlistItems.filter((i) => i.status === 'actief').length,
-    [wishlistItems]
+    () => wishlistItems.filter(
+      (i) => i.status === 'actief'
+        && (showAll || isOwnRecord(i, uid, collectionLabel))
+    ).length,
+    [wishlistItems, showAll, uid, collectionLabel]
   );
 
-  // Top 10 artists by frequency from loaded records
+  // Top 10 artists by frequency from scoped records
   const artistSuggestions = (() => {
     const freq = {};
-    for (const r of records) {
+    for (const r of scopedRecords) {
       if (r.artist) freq[r.artist] = (freq[r.artist] || 0) + 1;
     }
     return Object.entries(freq)
@@ -145,17 +174,42 @@ export default function Home() {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="vv-in">
       {/* Page header */}
-      <h1 style={headingStyle}>Mijn Platencollectie</h1>
-      <p style={subtitleStyle}>
-        {loading ? '…' : kpis.totalRecords} platen in de collectie
-      </p>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div>
+          <h1 style={headingStyle}>
+            {showAll ? 'Alle collecties' : `Welkom, ${displayName}`}
+          </h1>
+          <p style={subtitleStyle}>
+            {loading ? '…' : kpis.totalRecords}{' '}
+            {showAll ? 'platen in alle collecties' : 'platen in jouw collectie'}
+          </p>
+        </div>
+        <button
+          style={buttonStyle('secondary')}
+          onClick={() => setShowAll((v) => !v)}
+        >
+          {showAll
+            ? <><Icon name="user" size={15} /> Toon mijn collectie</>
+            : <><Icon name="users" size={15} /> Toon alle collecties</>}
+        </button>
+      </div>
 
       {/* Search bar */}
       <div style={searchWrapStyle}>
         <div style={searchInnerStyle}>
-          <span style={{ fontSize: '18px', color: colors.textSecondary }}>🔍</span>
+          <span style={{ color: colors.textSecondary, display: 'flex' }}>
+            <Icon name="search" size={18} />
+          </span>
           <input
             ref={searchRef}
             style={searchInputStyle}
@@ -186,26 +240,14 @@ export default function Home() {
       {/* KPI strip */}
       <div style={kpiRowStyle}>
         <KpiTegel
-          label="Totaal platen"
+          label={showAll ? 'Totaal platen' : 'Mijn platen'}
           value={kpis.totalRecords}
           onClick={() => navigate('/platen')}
         />
         <KpiTegel
-          label="Totale waarde"
+          label={showAll ? 'Totale waarde' : 'Mijn waarde'}
           value={'€' + kpis.totalValue.toFixed(2)}
           color="green"
-        />
-        <KpiTegel
-          label="Dario"
-          value={kpis.darioCount}
-          color="blue"
-          onClick={() => navigate('/platen?owner=dario')}
-        />
-        <KpiTegel
-          label="Papa"
-          value={kpis.papaCount}
-          color="orange"
-          onClick={() => navigate('/platen?owner=papa')}
         />
         <KpiTegel
           label="Wishlist actief"
@@ -221,9 +263,13 @@ export default function Home() {
         {loading ? (
           <p style={emptyStyle}>Laden...</p>
         ) : recentRecords.length === 0 ? (
-          <p style={emptyStyle}>Nog geen platen toegevoegd.</p>
+          <p style={emptyStyle}>
+            {showAll
+              ? 'Nog geen platen toegevoegd.'
+              : 'Je hebt nog geen platen in je collectie. Voeg er een toe of bekijk alle collecties.'}
+          </p>
         ) : (
-          <div style={gridStyle}>
+          <div style={gridStyle} className="vv-stagger">
             {recentRecords.map((record) => (
               <RecordCard key={record.id} record={record} />
             ))}

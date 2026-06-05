@@ -1,5 +1,12 @@
 import { useState, useRef } from 'react';
+import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
+import { useToast } from '../ui/Toast.jsx';
+import { lookupRelease } from '../../firebase/lookup.js';
+import BarcodeScanner from './BarcodeScanner.jsx';
+import Icon from '../ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
+
+const FORMAT_OPTIONS = ['LP', '7"', '10"', '12"', 'Box Set', 'Andere'];
 
 const inputStyle = {
   width: '100%',
@@ -179,10 +186,13 @@ function ImagePreview({ file, url }) {
 }
 
 export default function RecordForm({ initialData = {}, onSubmit, onCancel, loading }) {
+  const ownerOptions = useOwnerOptions();
   const [artist, setArtist] = useState(initialData.artist || '');
   const [title, setTitle] = useState(initialData.title || '');
   const [owner, setOwner] = useState(initialData.owner || 'Dario');
-  const [price, setPrice] = useState(initialData.price != null ? String(initialData.price) : '');
+  const [price, setPrice] = useState(
+    initialData.purchasePrice != null ? String(initialData.purchasePrice) : ''
+  );
   const [quantity, setQuantity] = useState(initialData.quantity != null ? String(initialData.quantity) : '1');
   const [purchaseDate, setPurchaseDate] = useState(initialData.purchaseDate || '');
 
@@ -196,13 +206,70 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   const [condition, setCondition] = useState(initialData.condition || '');
 
   const [coverFile, setCoverFile] = useState(null);
+  const [coverImageUrl, setCoverImageUrl] = useState(initialData.coverImageUrl || null);
   const [coverError, setCoverError] = useState('');
   const [extraFiles, setExtraFiles] = useState([]);
 
   const [notes, setNotes] = useState(initialData.notes || '');
 
+  const [looking, setLooking] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+
+  const showToast = useToast();
   const coverInputRef = useRef(null);
   const extraInputRef = useRef(null);
+
+  function applyResult(r) {
+    if (!artist && r.artist) setArtist(r.artist);
+    if (!title && r.title) setTitle(r.title);
+    if (!label && r.label) setLabel(r.label);
+    if (!year && r.year) setYear(String(r.year));
+    if (!country && r.country) setCountry(r.country);
+    if (r.format && FORMAT_OPTIONS.includes(r.format)) setFormat(r.format);
+    if (genres.length === 0 && Array.isArray(r.genres) && r.genres.length > 0) setGenres(r.genres);
+    if (!catalogNumber && r.catalogNumber) setCatalogNumber(r.catalogNumber);
+    if (!barcode && r.barcode) setBarcode(r.barcode);
+    if (!coverImageUrl && !coverFile && r.coverImageUrl) setCoverImageUrl(r.coverImageUrl);
+  }
+
+  async function doLookup(params) {
+    setLooking(true);
+    try {
+      const res = await lookupRelease(params);
+      if (res.found && res.result) {
+        applyResult(res.result);
+        showToast(`Metadata gevonden via ${res.result.source}.`, 'success');
+      } else {
+        showToast('Geen metadata gevonden. Vul de gegevens handmatig in.', 'error');
+      }
+    } catch (err) {
+      console.error('RecordForm: lookup failed', err);
+      showToast('Metadata-lookup mislukt. Probeer later opnieuw.', 'error');
+    } finally {
+      setLooking(false);
+    }
+  }
+
+  function handleLookup() {
+    const params = barcode.trim()
+      ? { barcode: barcode.trim() }
+      : catalogNumber.trim()
+      ? { catalogNumber: catalogNumber.trim() }
+      : artist.trim() || title.trim()
+      ? { query: `${artist} ${title}`.trim() }
+      : null;
+    if (!params) {
+      showToast('Vul eerst een barcode, catalogusnummer of artiest/titel in.', 'error');
+      return;
+    }
+    doLookup(params);
+  }
+
+  function handleScanResult(value) {
+    setScanOpen(false);
+    setBarcode(value);
+    doLookup({ barcode: value });
+  }
 
   function handleCoverChange(e) {
     const file = e.target.files[0];
@@ -223,11 +290,15 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
 
   function handleSubmit(e) {
     e.preventDefault();
+    const matched = ownerOptions.find(
+      (o) => o.label.toLowerCase() === owner.toLowerCase()
+    );
     onSubmit({
       artist,
       title,
       owner,
-      price: price !== '' ? parseFloat(price) : null,
+      ownerUid: matched ? matched.uid : null,
+      purchasePrice: price !== '' ? parseFloat(price) : null,
       quantity: quantity !== '' ? parseInt(quantity, 10) : 1,
       purchaseDate,
       label,
@@ -239,6 +310,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       barcode,
       condition,
       coverFile,
+      coverImageUrl,
       extraFiles,
       notes,
     });
@@ -271,8 +343,43 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
     cursor: 'pointer',
   };
 
+  const lookupBarStyle = {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    backgroundColor: colors.bgHover || '#242424',
+    border: `1px solid ${colors.borderColor}`,
+    borderRadius: radius.md,
+    padding: '12px 14px',
+    marginBottom: '24px',
+  };
+
   return (
     <form onSubmit={handleSubmit} noValidate>
+      {/* Metadata-lookup (Phase 3) */}
+      <div style={lookupBarStyle}>
+        <span style={{ fontSize: '13px', color: colors.textSecondary, flex: '1 1 200px' }}>
+          Vul automatisch aan via barcode of catalogusnummer.
+        </span>
+        <button
+          type="button"
+          style={buttonStyle('secondary')}
+          onClick={handleLookup}
+          disabled={looking}
+        >
+          {looking ? 'Zoeken…' : <><Icon name="search" size={15} /> Metadata ophalen</>}
+        </button>
+        <button
+          type="button"
+          style={buttonStyle('secondary')}
+          onClick={() => setScanOpen(true)}
+          disabled={looking}
+        >
+          <Icon name="camera" size={15} /> Scan barcode
+        </button>
+      </div>
+
       {/* Basisinfo */}
       <div style={sectionWrapStyle}>
         <h3 style={sectionHeaderStyle}>Basisinfo</h3>
@@ -295,8 +402,12 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           </Field>
           <Field label="Eigenaar *">
             <Select value={owner} onChange={(e) => setOwner(e.target.value)} required>
-              <option value="Dario">Dario</option>
-              <option value="Papa">Papa</option>
+              {ownerOptions.length === 0 && <option value={owner}>{owner}</option>}
+              {!ownerOptions.some((o) => o.label.toLowerCase() === owner.toLowerCase()) &&
+                owner && <option value={owner}>{owner}</option>}
+              {ownerOptions.map((o) => (
+                <option key={o.label} value={o.label}>{o.label}</option>
+              ))}
             </Select>
           </Field>
           <Field label="Aankoopprijs EUR">
@@ -423,8 +534,8 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               {coverFile && (
                 <ImagePreview file={coverFile} />
               )}
-              {!coverFile && initialData.coverImageUrl && (
-                <ImagePreview url={initialData.coverImageUrl} />
+              {!coverFile && coverImageUrl && (
+                <ImagePreview url={coverImageUrl} />
               )}
             </div>
           </Field>
@@ -488,6 +599,12 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           {loading ? 'Bezig...' : 'Opslaan'}
         </button>
       </div>
+
+      <BarcodeScanner
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onResult={handleScanResult}
+      />
     </form>
   );
 }

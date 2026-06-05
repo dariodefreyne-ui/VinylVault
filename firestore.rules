@@ -13,9 +13,25 @@ service cloud.firestore {
     function isActivated() { return isSignedIn() && userRole() != null && userRole() != 'pending'; }
 
     match /users/{uid} {
-      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      // Geactiveerde gebruikers mogen elkaars profiel lezen (owner-selectie,
+      // collectie-browsing). Eigen profiel + admin altijd.
+      allow read: if isSignedIn() && (request.auth.uid == uid || isActivated());
       allow create: if isSignedIn() && request.auth.uid == uid;
-      allow update: if isAdmin();
+      // Admin mag alles. Een gebruiker mag zijn eigen profiel bijwerken
+      // (pincode, collectionLabel, collectionVisibility, displayName) maar
+      // NOOIT zijn eigen rol wijzigen.
+      allow update: if isAdmin()
+        || (isSignedIn() && request.auth.uid == uid
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+    }
+
+    match /collectionGrants/{id} {
+      // Toegang verlenen om een private collectie te bekijken.
+      allow read: if isActivated();
+      allow create: if isSignedIn()
+        && request.resource.data.granterUid == request.auth.uid;
+      allow delete: if isSignedIn()
+        && (resource.data.granterUid == request.auth.uid || isAdmin());
     }
 
     match /records/{id} {

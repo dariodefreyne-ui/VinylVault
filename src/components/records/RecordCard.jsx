@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { colors, radius, badgeStyle, chipStyle } from '../../styles/tokens.js';
+import { colors, radius, shadows, badgeStyle, chipStyle, ownerColor } from '../../styles/tokens.js';
+import Icon from '../ui/Icon.jsx';
 
 export default function RecordCard({ record }) {
   const navigate = useNavigate();
@@ -20,9 +21,8 @@ export default function RecordCard({ record }) {
     owner,
   } = record;
 
-  const ownerLower = (owner || '').toLowerCase();
-  const ownerColor = ownerLower === 'dario' ? 'red' : 'blue';
-  const ownerLabel = ownerLower === 'dario' ? 'Dario' : ownerLower === 'papa' ? 'Papa' : owner;
+  const ownerBadge = ownerColor(owner);
+  const ownerLabel = owner;
 
   const visibleGenres = Array.isArray(genres) ? genres.slice(0, 2) : [];
 
@@ -30,12 +30,13 @@ export default function RecordCard({ record }) {
 
   const cardStyle = {
     backgroundColor: colors.bgCard,
-    border: `1px solid ${hovered ? colors.accentRed : colors.borderColor}`,
+    border: `1px solid ${hovered ? colors.brand : colors.borderColor}`,
     borderRadius: radius.md,
     padding: '16px',
     cursor: 'pointer',
-    transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
-    transition: 'border-color 0.15s ease, transform 0.15s ease',
+    transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+    boxShadow: hovered ? shadows.glow : shadows.card,
+    transition: 'border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
@@ -44,28 +45,30 @@ export default function RecordCard({ record }) {
   const topRowStyle = {
     display: 'flex',
     alignItems: 'flex-start',
-    gap: '12px',
+    gap: '14px',
   };
 
   const thumbStyle = {
-    width: '60px',
-    height: '60px',
+    width: '76px',
+    height: '76px',
     borderRadius: radius.sm,
     objectFit: 'cover',
     flexShrink: 0,
     backgroundColor: colors.bgHover,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
   };
 
   const placeholderStyle = {
-    width: '60px',
-    height: '60px',
+    width: '76px',
+    height: '76px',
     borderRadius: radius.sm,
-    backgroundColor: colors.bgHover,
+    background: `radial-gradient(circle at 50% 50%, ${colors.bgHover} 0%, #100d0b 72%, ${colors.bgHover} 73%, #100d0b 100%)`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '24px',
+    color: colors.brand,
     flexShrink: 0,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
   };
 
   const infoStyle = {
@@ -133,7 +136,7 @@ export default function RecordCard({ record }) {
           <img src={coverImageUrl} alt={title} style={thumbStyle} />
         ) : (
           <div style={placeholderStyle}>
-            <span role="img" aria-label="vinyl">🎵</span>
+            <Icon name="disc" size={30} strokeWidth={1.4} />
           </div>
         )}
 
@@ -149,7 +152,7 @@ export default function RecordCard({ record }) {
 
         {owner && (
           <div style={ownerWrapStyle}>
-            <span style={badgeStyle(ownerColor)}>{ownerLabel}</span>
+            <span style={badgeStyle(ownerBadge)}>{ownerLabel}</span>
           </div>
         )}
       </div>

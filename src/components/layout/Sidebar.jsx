@@ -3,7 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { logout } from '../../firebase/auth.js';
 import { isAdmin, isBeheerder } from '../../utils/roles.js';
-import { colors, radius, badgeStyle, buttonStyle } from '../../styles/tokens.js';
+import { colors, radius, fonts, badgeStyle, buttonStyle } from '../../styles/tokens.js';
+import Icon from '../ui/Icon.jsx';
 
 const SIDEBAR_WIDTH = 260;
 
@@ -57,7 +58,7 @@ function NavItem({ to, icon, label, end }) {
         borderRadius: radius.md,
         fontSize: '14px',
         fontWeight: isActive ? 600 : 400,
-        color: isActive ? colors.accentRed : colors.textPrimary,
+        color: isActive ? colors.brand : colors.textPrimary,
         backgroundColor: 'transparent',
         textDecoration: 'none',
         transition: 'background-color 0.15s ease, color 0.15s ease',
@@ -70,7 +71,7 @@ function NavItem({ to, icon, label, end }) {
         e.currentTarget.style.backgroundColor = 'transparent';
       }}
     >
-      <span style={{ fontSize: '16px', flexShrink: 0 }}>{icon}</span>
+      <Icon name={icon} size={18} />
       <span>{label}</span>
     </NavLink>
   );
@@ -134,20 +135,28 @@ export default function Sidebar({ mobileOpen, onClose }) {
       <div style={style}>
         {/* Logo / App title */}
         <div
+          className='vv-logo'
           style={{
-            padding: '20px 16px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '11px',
+            padding: '20px 16px 14px',
             borderBottom: `1px solid ${colors.borderColor}`,
           }}
         >
+          <span className='vv-logo-disc' style={{ color: colors.brand, display: 'flex' }}>
+            <Icon name='disc' size={26} strokeWidth={1.5} />
+          </span>
           <div
             style={{
-              fontSize: '18px',
-              fontWeight: 700,
-              color: colors.textPrimary,
+              fontFamily: fonts.display,
+              fontSize: '21px',
+              fontWeight: 600,
               letterSpacing: '-0.01em',
+              color: colors.textPrimary,
             }}
           >
-            🎵 VinylVault
+            Vinyl<span style={{ color: colors.brand }}>Vault</span>
           </div>
         </div>
 
@@ -155,16 +164,17 @@ export default function Sidebar({ mobileOpen, onClose }) {
         <nav style={{ flex: 1, padding: '8px' }}>
           {/* Groep 1 — Collectie */}
           <GroupLabel>Collectie</GroupLabel>
-          <NavItem to='/' end icon='🏠' label='Home' />
-          <NavItem to='/platen' icon='🎵' label='Alle Platen' />
-          <NavItem to='/wishlist' icon='❤️' label='Wishlist' />
-          <NavItem to='/statistieken' icon='📊' label='Statistieken' />
+          <NavItem to='/' end icon='home' label='Home' />
+          <NavItem to='/platen' icon='disc' label='Alle Platen' />
+          <NavItem to='/wishlist' icon='heart' label='Wishlist' />
+          <NavItem to='/statistieken' icon='chart' label='Statistieken' />
+          <NavItem to='/profiel' icon='user' label='Profiel' />
 
           {/* Groep 2 — Beheer */}
           {isBeheerder(role) && (
             <>
               <GroupLabel>Beheer</GroupLabel>
-              <NavItem to='/platen/nieuw' icon='➕' label='Plaat toevoegen' />
+              <NavItem to='/platen/nieuw' icon='plus' label='Plaat toevoegen' />
             </>
           )}
 
@@ -172,7 +182,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
           {isAdmin(role) && (
             <>
               <GroupLabel>Admin</GroupLabel>
-              <NavItem to='/admin' icon='👤' label='Gebruikers' />
+              <NavItem to='/admin' icon='shield' label='Gebruikers' />
             </>
           )}
         </nav>
@@ -220,7 +230,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
               e.currentTarget.style.color = colors.textSecondary;
             }}
           >
-            🚪 Uitloggen
+            <Icon name='logout' size={16} /> Uitloggen
           </button>
         </div>
       </div>
@@ -251,6 +261,8 @@ export default function Sidebar({ mobileOpen, onClose }) {
         @media (max-width: 767px) {
           .sidebar-desktop { display: none !important; }
         }
+        .vv-logo-disc { transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+        .vv-logo:hover .vv-logo-disc { transform: rotate(360deg); }
       `}</style>
 
       {/* Mobile overlay sidebar */}

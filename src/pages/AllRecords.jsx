@@ -4,6 +4,7 @@ import { useRecords } from '../hooks/useRecords.js';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { isBeheerder } from '../utils/roles.js';
 import RecordCard from '../components/records/RecordCard.jsx';
+import Icon from '../components/ui/Icon.jsx';
 import Chip from '../components/ui/Chip.jsx';
 import ImportModal from '../components/ImportModal.jsx';
 import { exportToExcel } from '../utils/importExcel.js';
@@ -14,12 +15,6 @@ const SORT_OPTIONS = [
   { value: 'artist_desc', label: 'Artiest Z-A' },
   { value: 'newest', label: 'Nieuwste eerst' },
   { value: 'price_desc', label: 'Duurste eerst' },
-];
-
-const OWNER_FILTERS = [
-  { value: '', label: 'Alles' },
-  { value: 'dario', label: 'Dario' },
-  { value: 'papa', label: 'Papa' },
 ];
 
 function sortRecords(list, sortValue) {
@@ -56,15 +51,35 @@ export default function AllRecords() {
   const urlOwner = searchParams.get('owner') || '';
 
   const [search, setSearch] = useState(urlSearch);
-  const [ownerFilter, setOwnerFilter] = useState(urlOwner);
+  // Meerdere eigenaren tegelijk selecteerbaar (gemengde collectie). Lege selectie = alles.
+  const [selectedOwners, setSelectedOwners] = useState(urlOwner ? [urlOwner] : []);
   const [genreFilter, setGenreFilter] = useState('');
   const [sortValue, setSortValue] = useState('artist_asc');
 
   // Sync URL params on mount
   useEffect(() => {
     setSearch(urlSearch);
-    setOwnerFilter(urlOwner);
+    setSelectedOwners(urlOwner ? [urlOwner] : []);
   }, [urlSearch, urlOwner]);
+
+  // Unieke eigenaren uit de records (de labels die echt voorkomen).
+  const ownerList = useMemo(() => {
+    const set = new Set();
+    for (const r of records) {
+      if (r.owner && r.owner.trim()) set.add(r.owner.trim());
+    }
+    return [...set].sort((a, b) =>
+      a.localeCompare(b, 'nl', { sensitivity: 'base' })
+    );
+  }, [records]);
+
+  function toggleOwner(label) {
+    setSelectedOwners((prev) =>
+      prev.some((o) => o.toLowerCase() === label.toLowerCase())
+        ? prev.filter((o) => o.toLowerCase() !== label.toLowerCase())
+        : [...prev, label]
+    );
+  }
 
   // Unique genres from all records
   const allGenres = useMemo(() => {
@@ -90,10 +105,9 @@ export default function AllRecords() {
       );
     }
 
-    if (ownerFilter) {
-      list = list.filter(
-        (r) => (r.owner || '').toLowerCase() === ownerFilter.toLowerCase()
-      );
+    if (selectedOwners.length > 0) {
+      const set = new Set(selectedOwners.map((o) => o.toLowerCase()));
+      list = list.filter((r) => set.has((r.owner || '').toLowerCase()));
     }
 
     if (genreFilter) {
@@ -103,7 +117,7 @@ export default function AllRecords() {
     }
 
     return sortRecords(list, sortValue);
-  }, [records, search, ownerFilter, genreFilter, sortValue]);
+  }, [records, search, selectedOwners, genreFilter, sortValue]);
 
   // Stats for filtered list
   const filteredValue = filtered.reduce(
@@ -210,7 +224,9 @@ export default function AllRecords() {
       <div style={actionBarStyle}>
         {/* Search */}
         <div style={searchInnerStyle}>
-          <span style={{ fontSize: '16px', color: colors.textSecondary }}>🔍</span>
+          <span style={{ color: colors.textSecondary, display: 'flex' }}>
+            <Icon name="search" size={17} />
+          </span>
           <input
             style={searchInputStyle}
             type="text"
@@ -220,14 +236,21 @@ export default function AllRecords() {
           />
         </div>
 
-        {/* Owner filter chips */}
+        {/* Owner filter chips — meerdere tegelijk = gemengde collectie */}
         <div style={chipRowStyle}>
-          {OWNER_FILTERS.map((o) => (
+          <Chip
+            label="Alles"
+            active={selectedOwners.length === 0}
+            onClick={() => setSelectedOwners([])}
+          />
+          {ownerList.map((label) => (
             <Chip
-              key={o.value}
-              label={o.label}
-              active={ownerFilter === o.value}
-              onClick={() => setOwnerFilter(o.value)}
+              key={label}
+              label={label}
+              active={selectedOwners.some(
+                (o) => o.toLowerCase() === label.toLowerCase()
+              )}
+              onClick={() => toggleOwner(label)}
             />
           ))}
         </div>
@@ -261,7 +284,7 @@ export default function AllRecords() {
           onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
           disabled={loading || filtered.length === 0}
         >
-          Exporteer
+          <Icon name="upload" size={15} /> Exporteer
         </button>
 
         {/* Add + Import buttons (beheerder only) */}
@@ -271,13 +294,13 @@ export default function AllRecords() {
               style={buttonStyle('primary')}
               onClick={() => navigate('/platen/nieuw')}
             >
-              + Plaat toevoegen
+              <Icon name="plus" size={15} /> Plaat toevoegen
             </button>
             <button
               style={buttonStyle('secondary')}
               onClick={() => setImportOpen(true)}
             >
-              Importeer
+              <Icon name="download" size={15} /> Importeer
             </button>
           </>
         )}
@@ -296,7 +319,7 @@ export default function AllRecords() {
       ) : filtered.length === 0 ? (
         <p style={emptyStyle}>Geen platen gevonden.</p>
       ) : (
-        <div style={gridStyle}>
+        <div style={gridStyle} className="vv-stagger">
           {filtered.map((record) => (
             <RecordCard key={record.id} record={record} />
           ))}

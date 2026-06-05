@@ -4,6 +4,7 @@ import { db } from '../../firebase/config.js';
 import { logout } from '../../firebase/auth.js';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { useToast } from '../ui/Toast.jsx';
+import Icon from '../ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 const INACTIVITY_MS = 600000; // 10 minutes
@@ -245,6 +246,10 @@ export default function PincodeLock() {
   };
 
   const headingStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '9px',
     fontSize: '20px',
     fontWeight: 700,
     color: colors.textPrimary,
@@ -285,7 +290,7 @@ export default function PincodeLock() {
     return (
       <div style={overlayStyle} role='dialog' aria-modal='true' aria-label='Pincode vergrendeld'>
         <div style={cardStyle}>
-          <div style={headingStyle}>🔒 Scherm vergrendeld</div>
+          <div style={headingStyle}><Icon name="lock" size={20} /> Scherm vergrendeld</div>
           <div style={subStyle}>
             Voer je pincode in om door te gaan.
           </div>
@@ -317,7 +322,7 @@ export default function PincodeLock() {
     return (
       <div style={overlayStyle} role='dialog' aria-modal='true' aria-label='Pincode instellen'>
         <div style={cardStyle}>
-          <div style={headingStyle}>🔑 Stel pincode in</div>
+          <div style={headingStyle}><Icon name="key" size={20} /> Stel pincode in</div>
           <div style={subStyle}>
             Je hebt nog geen pincode. Kies een 4-cijferige pincode om je account te beveiligen.
           </div>
@@ -344,7 +349,7 @@ export default function PincodeLock() {
     return (
       <div style={overlayStyle} role='dialog' aria-modal='true' aria-label='Pincode bevestigen'>
         <div style={cardStyle}>
-          <div style={headingStyle}>🔑 Bevestig pincode</div>
+          <div style={headingStyle}><Icon name="key" size={20} /> Bevestig pincode</div>
           <div style={subStyle}>
             Voer de pincode nogmaals in ter bevestiging.
           </div>

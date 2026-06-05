@@ -5,7 +5,9 @@
 }
 
 :root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -13,14 +15,39 @@
 }
 
 body {
-  background-color: var(--bg-primary, #0f0f0f);
-  color: var(--text-primary, #f0f0f0);
+  position: relative;
+  background-color: var(--bg-primary, #141110);
+  color: var(--text-primary, #f2ebdd);
   min-height: 100vh;
+  /* Warme gloed + diepte i.p.v. een platte kleur — subtiel, niet schreeuwerig */
+  background-image:
+    radial-gradient(1100px 620px at 82% -12%, rgba(217, 160, 91, 0.10), transparent 60%),
+    radial-gradient(820px 520px at -12% 112%, rgba(207, 106, 76, 0.08), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Fijne filmkorrel over het geheel — geeft analoge textuur */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #root {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 button {
@@ -29,4 +56,58 @@ button {
 
 input, select, textarea {
   font-family: inherit;
+}
+
+/* Zichtbare, warme focus-ring (was nergens aanwezig) */
+:focus-visible {
+  outline: 2px solid var(--brand, #d9a05b);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: rgba(217, 160, 91, 0.30);
+  color: #fff;
+}
+
+/* Warme, smalle scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3128 transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: #3a3128;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: #4a4032; background-clip: padding-box; }
+
+/* ── Motion: zachte entrance + gestapelde reveal ───────────────────────── */
+@keyframes vv-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.vv-in {
+  animation: vv-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Gestapelde reveal voor grids/lijsten: directe kinderen komen na elkaar op */
+.vv-stagger > * {
+  animation: vv-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.vv-stagger > *:nth-child(1)  { animation-delay: 0.03s; }
+.vv-stagger > *:nth-child(2)  { animation-delay: 0.07s; }
+.vv-stagger > *:nth-child(3)  { animation-delay: 0.11s; }
+.vv-stagger > *:nth-child(4)  { animation-delay: 0.15s; }
+.vv-stagger > *:nth-child(5)  { animation-delay: 0.19s; }
+.vv-stagger > *:nth-child(6)  { animation-delay: 0.23s; }
+.vv-stagger > *:nth-child(7)  { animation-delay: 0.27s; }
+.vv-stagger > *:nth-child(8)  { animation-delay: 0.31s; }
+.vv-stagger > *:nth-child(n+9){ animation-delay: 0.35s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vv-in, .vv-stagger > * { animation: none !important; }
 }

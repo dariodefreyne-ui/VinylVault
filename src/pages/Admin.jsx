@@ -5,6 +5,7 @@ import { useToast } from '../components/ui/Toast.jsx';
 import { isAdmin, isBeheerder } from '../utils/roles.js';
 import UserTable from '../components/admin/UserTable.jsx';
 import ImportModal from '../components/ImportModal.jsx';
+import Icon from '../components/ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 const pageStyle = {
@@ -140,9 +141,12 @@ export default function Admin() {
             marginBottom: '24px',
             fontSize: '14px',
             color: colors.accentOrange,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}
         >
-          ⚠️ {pendingCount} gebruiker(s) wachten op activatie.
+          <Icon name="alert" size={16} /> {pendingCount} gebruiker(s) wachten op activatie.
         </div>
       )}
 
@@ -166,7 +170,7 @@ export default function Admin() {
             style={buttonStyle('secondary')}
             onClick={() => setImportOpen(true)}
           >
-            📥 Importeer collectie
+            <Icon name="download" size={15} /> Importeer collectie
           </button>
         </div>
       )}
