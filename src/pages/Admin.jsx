@@ -8,6 +8,7 @@ import { useToast } from '../components/ui/Toast.jsx';
 import { isAdmin, isBeheerder } from '../utils/roles.js';
 import UserTable from '../components/admin/UserTable.jsx';
 import ImportModal from '../components/ImportModal.jsx';
+import OwnerManager from '../components/admin/OwnerManager.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
@@ -201,6 +202,9 @@ export default function Admin() {
           </button>
         </div>
       )}
+
+      {/* Eigenaars beheren (hernoemen / verwijderen per eigenaar) */}
+      {isAdmin(role) && <OwnerManager />}
 
       {/* Gevarenzone — alle lp's wissen (voor een schone herstart) */}
       {isAdmin(role) && (
