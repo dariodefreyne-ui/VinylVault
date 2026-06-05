@@ -69,7 +69,7 @@ export default function ArtistPivotTable({ records, ownerFilter }) {
           <tr>
             <th style={{ ...thStyle, width: '48px', textAlign: 'right' }}>N°</th>
             <th style={thStyle}>Artiest</th>
-            <th style={{ ...thStyle, textAlign: 'right' }}>Aantal platen</th>
+            <th style={{ ...thStyle, textAlign: 'right' }}>Aantal lp's</th>
             <th style={{ ...thStyle, textAlign: 'right' }}>Totale waarde (EUR)</th>
           </tr>
         </thead>
@@ -131,7 +131,7 @@ export default function ArtistPivotTable({ records, ownerFilter }) {
                 colSpan={4}
                 style={{ ...tdStyle, textAlign: 'center', color: colors.textSecondary }}
               >
-                Geen platen gevonden.
+                Geen lp's gevonden.
               </td>
             </tr>
           )}

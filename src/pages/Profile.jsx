@@ -138,7 +138,7 @@ export default function Profile() {
       <div style={cardStyle}>
         <div style={sectionTitleStyle}>Collectie-instellingen</div>
         <div style={sectionSubStyle}>
-          Je collectie-label bepaalt welke platen als "van jou" gelden.
+          Je collectie-label bepaalt welke lp's als "van jou" gelden.
         </div>
 
         <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>

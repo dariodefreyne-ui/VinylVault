@@ -57,7 +57,7 @@ export default function Login() {
   }
 
   const pageStyle = {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     backgroundColor: colors.bgPrimary,
     display: 'flex',
     alignItems: 'center',

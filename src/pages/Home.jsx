@@ -191,7 +191,7 @@ export default function Home() {
           </h1>
           <p style={subtitleStyle}>
             {loading ? '…' : kpis.totalRecords}{' '}
-            {showAll ? 'platen in alle collecties' : 'platen in jouw collectie'}
+            {showAll ? "lp's in alle collecties" : "lp's in jouw collectie"}
           </p>
         </div>
         <button
@@ -240,7 +240,7 @@ export default function Home() {
       {/* KPI strip */}
       <div style={kpiRowStyle}>
         <KpiTegel
-          label={showAll ? 'Totaal platen' : 'Mijn platen'}
+          label={showAll ? "Totaal lp's" : "Mijn lp's"}
           value={kpis.totalRecords}
           onClick={() => navigate('/platen')}
         />
@@ -265,8 +265,8 @@ export default function Home() {
         ) : recentRecords.length === 0 ? (
           <p style={emptyStyle}>
             {showAll
-              ? 'Nog geen platen toegevoegd.'
-              : 'Je hebt nog geen platen in je collectie. Voeg er een toe of bekijk alle collecties.'}
+              ? "Nog geen lp's toegevoegd."
+              : "Je hebt nog geen lp's in je collectie. Voeg er een toe of bekijk alle collecties."}
           </p>
         ) : (
           <div style={gridStyle} className="vv-stagger">

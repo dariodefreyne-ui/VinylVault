@@ -213,11 +213,11 @@ export default function AllRecords() {
   return (
     <div style={pageStyle}>
       {/* Page header */}
-      <h1 style={headingStyle}>Alle Platen</h1>
+      <h1 style={headingStyle}>Alle Lp's</h1>
       <p style={subtitleStyle}>
         {loading
           ? 'Laden...'
-          : `${filtered.length} van ${records.length} platen`}
+          : `${filtered.length} van ${records.length} lp's`}
       </p>
 
       {/* Top action bar */}
@@ -294,7 +294,7 @@ export default function AllRecords() {
               style={buttonStyle('primary')}
               onClick={() => navigate('/platen/nieuw')}
             >
-              <Icon name="plus" size={15} /> Plaat toevoegen
+              <Icon name="plus" size={15} /> Lp toevoegen
             </button>
             <button
               style={buttonStyle('secondary')}
@@ -309,7 +309,7 @@ export default function AllRecords() {
       {/* Stats bar */}
       {!loading && (
         <div style={statsBarStyle}>
-          {filtered.length} platen getoond &middot; Totale waarde: &euro;{filteredValue.toFixed(2)}
+          {filtered.length} lp's getoond &middot; Totale waarde: &euro;{filteredValue.toFixed(2)}
         </div>
       )}
 
@@ -317,7 +317,7 @@ export default function AllRecords() {
       {loading ? (
         <p style={emptyStyle}>Laden...</p>
       ) : filtered.length === 0 ? (
-        <p style={emptyStyle}>Geen platen gevonden.</p>
+        <p style={emptyStyle}>Geen lp's gevonden.</p>
       ) : (
         <div style={gridStyle} className="vv-stagger">
           {filtered.map((record) => (
