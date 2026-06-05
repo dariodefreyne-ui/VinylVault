@@ -198,6 +198,9 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
 
   const [label, setLabel] = useState(initialData.label || '');
   const [year, setYear] = useState(initialData.year != null ? String(initialData.year) : '');
+  const [releaseYear, setReleaseYear] = useState(
+    initialData.releaseYear != null ? String(initialData.releaseYear) : ''
+  );
   const [country, setCountry] = useState(initialData.country || '');
   const [format, setFormat] = useState(initialData.format || 'LP');
   const [genres, setGenres] = useState(initialData.genres || []);
@@ -224,6 +227,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
     if (!title && r.title) setTitle(r.title);
     if (!label && r.label) setLabel(r.label);
     if (!year && r.year) setYear(String(r.year));
+    if (!releaseYear && r.releaseYear) setReleaseYear(String(r.releaseYear));
     if (!country && r.country) setCountry(r.country);
     if (r.format && FORMAT_OPTIONS.includes(r.format)) setFormat(r.format);
     if (genres.length === 0 && Array.isArray(r.genres) && r.genres.length > 0) setGenres(r.genres);
@@ -306,6 +310,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       purchaseDate,
       label,
       year: year !== '' ? parseInt(year, 10) : null,
+      releaseYear: releaseYear !== '' ? parseInt(releaseYear, 10) : null,
       country,
       format,
       genres,
@@ -453,7 +458,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               placeholder="bijv. Apple Records"
             />
           </Field>
-          <Field label="Jaar">
+          <Field label="Jaar (origineel)">
             <Input
               type="number"
               value={year}
@@ -461,6 +466,16 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               min="1900"
               max="2099"
               placeholder="bijv. 1969"
+            />
+          </Field>
+          <Field label="Uitgavejaar (deze persing)">
+            <Input
+              type="number"
+              value={releaseYear}
+              onChange={(e) => setReleaseYear(e.target.value)}
+              min="1900"
+              max="2099"
+              placeholder="bijv. 2015 (heruitgave)"
             />
           </Field>
           <Field label="Land">

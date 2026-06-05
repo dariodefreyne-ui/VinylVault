@@ -122,6 +122,7 @@ export async function exportToExcel(records, filename = 'vinylvault-export.xlsx'
     Aankoopprijs: r.purchasePrice != null ? r.purchasePrice : '',
     Label: r.label || '',
     Jaar: r.year || '',
+    Uitgavejaar: r.releaseYear || '',
     Format: r.format || '',
     Barcode: r.barcode || '',
     Catalogusnummer: r.catalogNumber || '',

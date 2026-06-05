@@ -12,6 +12,7 @@ export default function RecordCard({ record }) {
     artist,
     title,
     year,
+    releaseYear,
     format,
     label: recordLabel,
     purchasePrice,
@@ -26,7 +27,11 @@ export default function RecordCard({ record }) {
 
   const visibleGenres = Array.isArray(genres) ? genres.slice(0, 2) : [];
 
-  const subParts = [year, format, recordLabel].filter(Boolean);
+  const yearPart =
+    releaseYear && year && releaseYear !== year
+      ? `${year} · ↻${releaseYear}`
+      : releaseYear || year;
+  const subParts = [yearPart, format, recordLabel].filter(Boolean);
 
   const cardStyle = {
     backgroundColor: colors.bgCard,
