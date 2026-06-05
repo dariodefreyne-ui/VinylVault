@@ -62,13 +62,17 @@ export default function AllRecords() {
     setSelectedOwners(urlOwner ? [urlOwner] : []);
   }, [urlSearch, urlOwner]);
 
-  // Unieke eigenaren uit de records (de labels die echt voorkomen).
+  // Unieke eigenaren uit de records — hoofdletterongevoelig samengevoegd
+  // ('Dario' en 'dario' tellen als één), met de eerst geziene schrijfwijze.
   const ownerList = useMemo(() => {
-    const set = new Set();
+    const byKey = new Map();
     for (const r of records) {
-      if (r.owner && r.owner.trim()) set.add(r.owner.trim());
+      const label = (r.owner || '').trim();
+      if (!label) continue;
+      const key = label.toLowerCase();
+      if (!byKey.has(key)) byKey.set(key, label);
     }
-    return [...set].sort((a, b) =>
+    return [...byKey.values()].sort((a, b) =>
       a.localeCompare(b, 'nl', { sensitivity: 'base' })
     );
   }, [records]);
