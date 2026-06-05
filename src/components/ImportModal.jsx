@@ -31,13 +31,38 @@ const FIELD_LABELS = {
 
 const REQUIRED_FIELDS = ['artist', 'owner'];
 
-// Sleutel om dubbele lp's te herkennen bij heropladen: barcode indien aanwezig,
-// anders artiest+titel+eigenaar (genormaliseerd).
-export function recordKey(r) {
-  const bc = (r.barcode != null ? String(r.barcode) : '').trim();
-  if (bc) return 'bc:' + bc;
-  const norm = (v) => (v != null ? String(v) : '').trim().toLowerCase();
+// Sleutels om dubbele lp's te herkennen bij heropladen. We indexeren op ZOWEL
+// barcode als artiest+titel+eigenaar, zodat een rij mét barcode ook een bestaande
+// lp zónder barcode terugvindt (en omgekeerd) — anders zouden er duplicaten ontstaan.
+const norm = (v) => (v != null ? String(v) : '').trim().toLowerCase();
+
+function atKey(r) {
   return 'at:' + norm(r.artist) + '|' + norm(r.title) + '|' + norm(r.owner);
+}
+function bcKey(r) {
+  const bc = (r.barcode != null ? String(r.barcode) : '').trim();
+  return bc ? 'bc:' + bc : null;
+}
+export function recordKeys(r) {
+  const keys = [atKey(r)];
+  const b = bcKey(r);
+  if (b) keys.push(b);
+  return keys;
+}
+// Indexeert bestaande records op al hun sleutels.
+export function buildExistingIndex(records) {
+  const m = new Map();
+  for (const r of records) {
+    for (const k of recordKeys(r)) m.set(k, r);
+  }
+  return m;
+}
+// Zoekt een bestaande lp die bij deze rij hoort (via eender welke sleutel).
+export function findExisting(index, row) {
+  for (const k of recordKeys(row)) {
+    if (index.has(k)) return index.get(k);
+  }
+  return null;
 }
 
 // Velden die bij een bestaande lp aangevuld mogen worden (nooit overschrijven).
@@ -393,7 +418,7 @@ function StepPreview({ rows, mapping, existingByKey, onNext, onBack }) {
   const sanitized = rows.map((raw) => {
     const record = sanitizeRow(raw, mapping);
     const hasError = !record.artist || !record.owner;
-    const existing = hasError ? null : existingByKey.get(recordKey(record));
+    const existing = hasError ? null : findExisting(existingByKey, record);
     const isDuplicate = !!existing;
     // Heeft het aanvullen van deze bestaande lp effect?
     const hasMerge = isDuplicate && Object.keys(mergeUpdates(existing, record)).length > 0;
@@ -576,7 +601,7 @@ function StepImporting({ sanitizedRows, skipErrors, existingMode, existingByKey,
         for (const { record, isDuplicate } of chunk) {
           if (isDuplicate) {
             // Bestaande lp aanvullen — enkel lege velden.
-            const existing = existingByKey.get(recordKey(record));
+            const existing = findExisting(existingByKey, record);
             if (existing) {
               const updates = mergeUpdates(existing, record);
               if (Object.keys(updates).length > 0) {
@@ -663,11 +688,7 @@ export default function ImportModal({ open, onClose }) {
   const { records } = useRecords();
   const showToast = useToast();
 
-  const existingByKey = useMemo(() => {
-    const m = new Map();
-    for (const r of records) m.set(recordKey(r), r);
-    return m;
-  }, [records]);
+  const existingByKey = useMemo(() => buildExistingIndex(records), [records]);
 
   const [step, setStep] = useState(1);
   const [parsedRows, setParsedRows] = useState(null);
