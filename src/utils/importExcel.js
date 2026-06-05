@@ -21,6 +21,7 @@ export const COLUMN_MAPPINGS = {
   catalogNumber: ['catalog', 'catalogus', 'catalogusnummer', 'catalog number', 'catno', 'cat no', 'cat. no', 'cat nr', 'catalognumber', 'labelnummer'],
   barcode: ['barcode', 'ean', 'upc', 'streepjescode', 'bar code', 'ean13', 'ean-13'],
   condition: ['condition', 'conditie', 'staat'],
+  location: ['locatie', 'kast', 'location', 'plek', 'vak'],
   notes: ['notes', 'notities', 'opmerkingen', 'commentaar'],
 };
 
@@ -121,6 +122,9 @@ export function sanitizeRow(row, mapping) {
   const condition = get('condition');
   if (condition) result.condition = condition;
 
+  const location = get('location');
+  if (location) result.location = location;
+
   const barcode = get('barcode');
   if (barcode) result.barcode = barcode;
 
@@ -149,6 +153,7 @@ export async function exportToExcel(records, filename = 'vinylvault-export.xlsx'
     Barcode: r.barcode || '',
     Catalogusnummer: r.catalogNumber || '',
     Conditie: r.condition || '',
+    'Locatie / kast': r.location || '',
     Land: r.country || '',
     Genres: Array.isArray(r.genres) ? r.genres.join(', ') : '',
     Aankoopdatum: r.purchaseDate || '',

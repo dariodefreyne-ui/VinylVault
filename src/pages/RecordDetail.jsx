@@ -11,7 +11,7 @@ import DetailModal from '../components/ui/DetailModal.jsx';
 import RecordForm from '../components/records/RecordForm.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import { originalLabel } from '../utils/records.js';
-import { colors, radius, buttonStyle, badgeStyle, ownerColor } from '../styles/tokens.js';
+import { colors, radius, buttonStyle, badgeStyle, chipStyle, ownerColor } from '../styles/tokens.js';
 
 async function uploadFile(file, path) {
   const storageRef = ref(storage, path);
@@ -91,6 +91,7 @@ export default function RecordDetail() {
   const [pageLoading, setPageLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
+  const [activeTab, setActiveTab] = useState('info');
   const [editOpen, setEditOpen] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -280,6 +281,7 @@ export default function RecordDetail() {
     catalogNumber: record.catalogNumber || '',
     barcode: record.barcode || '',
     condition: record.condition || '',
+    location: record.location || '',
     tracklist: Array.isArray(record.tracklist) ? record.tracklist : [],
     notes: record.notes || '',
     coverImageUrl: record.coverImageUrl || null,
@@ -309,6 +311,14 @@ export default function RecordDetail() {
     padding: '12px 0',
     marginBottom: '20px',
   };
+
+  const tabBarStyle = { display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' };
+  const TABS = [
+    { key: 'info', label: 'Info' },
+    { key: 'tracklist', label: 'Tracklist' },
+    { key: 'fotos', label: "Foto's" },
+    { key: 'notities', label: 'Notities' },
+  ];
 
   return (
     <div style={pageStyle}>
@@ -354,62 +364,77 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* Alle info (zoals in 'Bewerken') in inklapbare secties, standaard ingeklapt */}
-      <Section title="Algemeen">
-        <div style={infoGridStyle}>
-          <InfoRow label="Artiest" value={record.artist} />
-          <InfoRow label="Titel" value={record.title} />
-          <InfoRow label="Eigenaar" value={record.owner} />
-          <InfoRow label="Aantal" value={record.quantity} />
-        </div>
-        {record.genres && record.genres.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Genres
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {record.genres.map((g) => (
-                <span key={g} style={{ display: 'inline-flex', padding: '2px 10px', borderRadius: '999px', backgroundColor: colors.brandDim, color: colors.brandStrong, fontSize: '12px', fontWeight: 500 }}>
-                  {g}
-                </span>
-              ))}
+      {/* Tabs: Info / Tracklist / Foto's / Notities */}
+      <div style={tabBarStyle}>
+        {TABS.map((t) => (
+          <button key={t.key} style={chipStyle(activeTab === t.key)} onClick={() => setActiveTab(t.key)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Info — alle opgeslagen velden in inklapbare secties (standaard ingeklapt) */}
+      {activeTab === 'info' && (
+        <div>
+          <Section title="Algemeen">
+            <div style={infoGridStyle}>
+              <InfoRow label="Artiest" value={record.artist} />
+              <InfoRow label="Titel" value={record.title} />
+              <InfoRow label="Eigenaar" value={record.owner} />
+              <InfoRow label="Aantal" value={record.quantity} />
             </div>
-          </div>
-        )}
-      </Section>
+            {record.genres && record.genres.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Genres
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {record.genres.map((g) => (
+                    <span key={g} style={{ display: 'inline-flex', padding: '2px 10px', borderRadius: '999px', backgroundColor: colors.brandDim, color: colors.brandStrong, fontSize: '12px', fontWeight: 500 }}>
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Section>
 
-      <Section title="Lp-details (persing & uitgave)">
-        <div style={infoGridStyle}>
-          <InfoRow label="Label" value={record.label} />
-          <InfoRow label="Catalogusnummer" value={record.catalogNumber} />
-          <InfoRow label="Barcode" value={record.barcode} />
-          <InfoRow label="Land" value={record.country} />
-          <InfoRow label="Jaar (origineel)" value={record.year} />
-          <InfoRow
-            label="Uitgavejaar"
-            value={
-              record.releaseYear
-                ? record.releaseYear +
-                  (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
-                : null
-            }
-          />
-          <InfoRow label="Origineel" value={originalLabel(record)} />
-          <InfoRow label="Format" value={record.format} />
-          <InfoRow label="Conditie" value={record.condition} />
+          <Section title="Lp-details (persing & uitgave)">
+            <div style={infoGridStyle}>
+              <InfoRow label="Label" value={record.label} />
+              <InfoRow label="Catalogusnummer" value={record.catalogNumber} />
+              <InfoRow label="Barcode" value={record.barcode} />
+              <InfoRow label="Land" value={record.country} />
+              <InfoRow label="Jaar (origineel)" value={record.year} />
+              <InfoRow
+                label="Uitgavejaar"
+                value={
+                  record.releaseYear
+                    ? record.releaseYear +
+                      (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
+                    : null
+                }
+              />
+              <InfoRow label="Origineel" value={originalLabel(record)} />
+              <InfoRow label="Format" value={record.format} />
+              <InfoRow label="Conditie" value={record.condition} />
+              <InfoRow label="Locatie / kast" value={record.location} />
+            </div>
+          </Section>
+
+          <Section title="Aankoop">
+            <div style={infoGridStyle}>
+              <InfoRow label="Aankoopprijs" value={record.purchasePrice != null && record.purchasePrice !== '' ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
+              <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
+              <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
+            </div>
+          </Section>
         </div>
-      </Section>
+      )}
 
-      <Section title="Aankoop">
-        <div style={infoGridStyle}>
-          <InfoRow label="Aankoopprijs" value={record.purchasePrice != null && record.purchasePrice !== '' ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
-          <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
-          <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
-        </div>
-      </Section>
-
-      <Section title="Tracklist">
-        {record.tracklist && record.tracklist.length > 0 ? (
+      {/* Tracklist */}
+      {activeTab === 'tracklist' && (
+        record.tracklist && record.tracklist.length > 0 ? (
           <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {record.tracklist.map((track, i) => (
               <li key={i} style={{ fontSize: '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
@@ -419,11 +444,12 @@ export default function RecordDetail() {
           </ol>
         ) : (
           <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen tracklist beschikbaar.</p>
-        )}
-      </Section>
+        )
+      )}
 
-      <Section title="Foto's">
-        {record.userPhotos && record.userPhotos.length > 0 ? (
+      {/* Foto's */}
+      {activeTab === 'fotos' && (
+        record.userPhotos && record.userPhotos.length > 0 ? (
           <div style={photoGridStyle}>
             {record.userPhotos.map((url, i) => (
               <a key={i} href={url} target="_blank" rel="noopener noreferrer">
@@ -437,18 +463,19 @@ export default function RecordDetail() {
           </div>
         ) : (
           <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen foto's beschikbaar.</p>
-        )}
-      </Section>
+        )
+      )}
 
-      <Section title="Notities">
-        {record.notes && record.notes.trim() ? (
+      {/* Notities */}
+      {activeTab === 'notities' && (
+        record.notes && record.notes.trim() ? (
           <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
             {record.notes}
           </p>
         ) : (
           <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen notities.</p>
-        )}
-      </Section>
+        )
+      )}
 
       {/* Bevestiging bij verwijderen */}
       {confirmDelete && (

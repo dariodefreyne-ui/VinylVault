@@ -208,6 +208,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   const [catalogNumber, setCatalogNumber] = useState(initialData.catalogNumber || '');
   const [barcode, setBarcode] = useState(initialData.barcode || '');
   const [condition, setCondition] = useState(initialData.condition || '');
+  const [location, setLocation] = useState(initialData.location || '');
   const [tracklist, setTracklist] = useState(
     Array.isArray(initialData.tracklist) ? initialData.tracklist : []
   );
@@ -324,6 +325,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       catalogNumber,
       barcode,
       condition,
+      location,
       tracklist: tracklist.map((t) => t.trim()).filter(Boolean),
       coverFile,
       coverImageUrl,
@@ -341,7 +343,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
     bottom: 0,
     backgroundColor: colors.bgCard,
     borderTop: `1px solid ${colors.borderColor}`,
-    padding: '16px 0 0',
+    padding: '16px 0 12px',
     display: 'flex',
     gap: '12px',
     justifyContent: 'flex-end',
@@ -532,6 +534,13 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               <option value="Good">Good</option>
               <option value="Poor">Poor</option>
             </Select>
+          </Field>
+          <Field label="Locatie / kast">
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="bijv. Kast A — vak 3"
+            />
           </Field>
         </div>
         <div style={{ marginBottom: '16px' }}>
