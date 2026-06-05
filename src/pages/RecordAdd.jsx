@@ -44,7 +44,8 @@ export default function RecordAdd() {
         artist: artist.trim(),
         title: title.trim(),
         owner,
-        coverImageUrl: null,
+        // coverImageUrl kan al ingevuld zijn via metadata-lookup (Discogs/MusicBrainz)
+        coverImageUrl: rest.coverImageUrl || null,
         userPhotos: [],
         addedBy: user ? user.uid : null,
       });

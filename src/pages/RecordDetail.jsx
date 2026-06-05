@@ -99,7 +99,9 @@ export default function RecordDetail() {
     const { coverFile, extraFiles, ...rest } = formData;
     setSaveLoading(true);
     try {
-      let coverImageUrl = record.coverImageUrl || null;
+      // rest.coverImageUrl kan via metadata-lookup gewijzigd zijn; een geüploade
+      // file heeft voorrang.
+      let coverImageUrl = rest.coverImageUrl || record.coverImageUrl || null;
       if (coverFile) {
         coverImageUrl = await uploadFile(coverFile, `records/${id}/cover_${Date.now()}.jpg`);
       }
