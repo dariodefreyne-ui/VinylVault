@@ -1,3 +1,5 @@
+import { originalLabel } from './records.js';
+
 // xlsx wordt dynamisch geladen (lazy) zodat de grote library niet in de
 // initiële bundle zit — enkel bij effectief importeren/exporteren.
 let xlsxPromise = null;
@@ -142,6 +144,7 @@ export async function exportToExcel(records, filename = 'vinylvault-export.xlsx'
     Label: r.label || '',
     Jaar: r.year || '',
     Uitgavejaar: r.releaseYear || '',
+    Origineel: originalLabel(r) || '',
     Format: r.format || '',
     Barcode: r.barcode || '',
     Catalogusnummer: r.catalogNumber || '',

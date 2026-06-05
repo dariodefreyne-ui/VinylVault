@@ -10,7 +10,8 @@ import { isBeheerder } from '../utils/roles.js';
 import DetailModal from '../components/ui/DetailModal.jsx';
 import RecordForm from '../components/records/RecordForm.jsx';
 import Icon from '../components/ui/Icon.jsx';
-import { colors, radius, buttonStyle, badgeStyle, chipStyle, ownerColor } from '../styles/tokens.js';
+import { originalLabel } from '../utils/records.js';
+import { colors, radius, buttonStyle, badgeStyle, ownerColor } from '../styles/tokens.js';
 
 async function uploadFile(file, path) {
   const storageRef = ref(storage, path);
@@ -90,7 +91,6 @@ export default function RecordDetail() {
   const [pageLoading, setPageLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('info');
   const [editOpen, setEditOpen] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -171,15 +171,6 @@ export default function RecordDetail() {
     padding: '24px',
   };
 
-  const topBarStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '24px',
-    flexWrap: 'wrap',
-    gap: '12px',
-  };
-
   const headerSectionStyle = {
     display: 'flex',
     gap: '24px',
@@ -234,14 +225,6 @@ export default function RecordDetail() {
     alignItems: 'center',
   };
 
-  const tabBarStyle = {
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '24px',
-    borderBottom: `1px solid ${colors.borderColor}`,
-    paddingBottom: '12px',
-  };
-
   const infoGridStyle = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
@@ -253,16 +236,6 @@ export default function RecordDetail() {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
     gap: '12px',
-  };
-
-  const deleteZoneStyle = {
-    marginTop: '40px',
-    paddingTop: '24px',
-    borderTop: `1px solid ${colors.borderColor}`,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    flexWrap: 'wrap',
   };
 
   if (pageLoading) {
@@ -322,17 +295,37 @@ export default function RecordDetail() {
     return null;
   }
 
+  const actionBarStyle = {
+    position: 'sticky',
+    top: 0,
+    zIndex: 20,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10px',
+    flexWrap: 'wrap',
+    backgroundColor: colors.bgPrimary,
+    borderBottom: `1px solid ${colors.borderColor}`,
+    padding: '12px 0',
+    marginBottom: '20px',
+  };
+
   return (
     <div style={pageStyle}>
-      {/* Top bar */}
-      <div style={topBarStyle}>
+      {/* Sticky actiebalk: terug links, bewerken + verwijderen naast elkaar rechts */}
+      <div style={actionBarStyle}>
         <button style={buttonStyle('ghost')} onClick={() => navigate('/platen')}>
-          ← Terug
+          <Icon name="back" size={16} /> Terug
         </button>
         {canEdit && (
-          <button style={buttonStyle('primary')} onClick={() => setEditOpen(true)}>
-            <Icon name="edit" size={15} /> Bewerken
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button style={buttonStyle('primary')} onClick={() => setEditOpen(true)}>
+              <Icon name="edit" size={15} /> Bewerken
+            </button>
+            <button style={buttonStyle('danger')} onClick={() => setConfirmDelete(true)}>
+              <Icon name="trash" size={15} /> Verwijderen
+            </button>
+          </div>
         )}
       </div>
 
@@ -361,169 +354,131 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={tabBarStyle}>
-        {['info', 'tracklist', 'fotos', 'notities'].map((tab) => (
-          <button
-            key={tab}
-            style={chipStyle(activeTab === tab)}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab === 'info' ? 'Info' : tab === 'tracklist' ? 'Tracklist' : tab === 'fotos' ? "Foto's" : 'Notities'}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab: Info — alle opgeslagen info, in inklapbare secties (standaard ingeklapt) */}
-      {activeTab === 'info' && (
-        <div>
-          <Section title="Algemeen">
-            <div style={infoGridStyle}>
-              <InfoRow label="Artiest" value={record.artist} />
-              <InfoRow label="Titel" value={record.title} />
-              <InfoRow label="Eigenaar" value={record.owner} />
-              <InfoRow label="Aantal" value={record.quantity} />
-            </div>
-            {record.genres && record.genres.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Genres
+      {/* Alle info (zoals in 'Bewerken') in inklapbare secties, standaard ingeklapt */}
+      <Section title="Algemeen">
+        <div style={infoGridStyle}>
+          <InfoRow label="Artiest" value={record.artist} />
+          <InfoRow label="Titel" value={record.title} />
+          <InfoRow label="Eigenaar" value={record.owner} />
+          <InfoRow label="Aantal" value={record.quantity} />
+        </div>
+        {record.genres && record.genres.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '16px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Genres
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {record.genres.map((g) => (
+                <span key={g} style={{ display: 'inline-flex', padding: '2px 10px', borderRadius: '999px', backgroundColor: colors.brandDim, color: colors.brandStrong, fontSize: '12px', fontWeight: 500 }}>
+                  {g}
                 </span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {record.genres.map((g) => (
-                    <span key={g} style={{ display: 'inline-flex', padding: '2px 10px', borderRadius: '999px', backgroundColor: colors.brandDim, color: colors.brandStrong, fontSize: '12px', fontWeight: 500 }}>
-                      {g}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </Section>
-
-          <Section title="Persing & uitgave">
-            <div style={infoGridStyle}>
-              <InfoRow label="Label" value={record.label} />
-              <InfoRow label="Catalogusnummer" value={record.catalogNumber} />
-              <InfoRow label="Barcode" value={record.barcode} />
-              <InfoRow label="Land" value={record.country} />
-              <InfoRow label="Jaar (origineel)" value={record.year} />
-              <InfoRow
-                label="Uitgavejaar"
-                value={
-                  record.releaseYear
-                    ? record.releaseYear +
-                      (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
-                    : null
-                }
-              />
-              <InfoRow label="Format" value={record.format} />
-              <InfoRow label="Conditie" value={record.condition} />
-            </div>
-          </Section>
-
-          <Section title="Aankoop">
-            <div style={infoGridStyle}>
-              <InfoRow label="Aankoopprijs" value={record.purchasePrice != null && record.purchasePrice !== '' ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
-              <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
-              <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
-            </div>
-          </Section>
-        </div>
-      )}
-
-      {/* Tab: Tracklist */}
-      {activeTab === 'tracklist' && (
-        <div>
-          {record.tracklist && record.tracklist.length > 0 ? (
-            <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {record.tracklist.map((track, i) => (
-                <li key={i} style={{ fontSize: '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
-                  {track}
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen tracklist beschikbaar.</p>
-          )}
-        </div>
-      )}
-
-      {/* Tab: Foto's */}
-      {activeTab === 'fotos' && (
-        <div>
-          {record.userPhotos && record.userPhotos.length > 0 ? (
-            <div style={photoGridStyle}>
-              {record.userPhotos.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                  <img
-                    src={url}
-                    alt={`Foto ${i + 1}`}
-                    style={{
-                      width: '100%',
-                      aspectRatio: '1',
-                      objectFit: 'cover',
-                      borderRadius: radius.sm,
-                      border: `1px solid ${colors.borderColor}`,
-                      display: 'block',
-                    }}
-                  />
-                </a>
               ))}
             </div>
-          ) : (
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen foto's beschikbaar.</p>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </Section>
 
-      {/* Tab: Notities */}
-      {activeTab === 'notities' && (
-        <div>
-          {record.notes && record.notes.trim() ? (
-            <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-              {record.notes}
-            </p>
-          ) : (
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen notities.</p>
-          )}
+      <Section title="Lp-details (persing & uitgave)">
+        <div style={infoGridStyle}>
+          <InfoRow label="Label" value={record.label} />
+          <InfoRow label="Catalogusnummer" value={record.catalogNumber} />
+          <InfoRow label="Barcode" value={record.barcode} />
+          <InfoRow label="Land" value={record.country} />
+          <InfoRow label="Jaar (origineel)" value={record.year} />
+          <InfoRow
+            label="Uitgavejaar"
+            value={
+              record.releaseYear
+                ? record.releaseYear +
+                  (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
+                : null
+            }
+          />
+          <InfoRow label="Origineel" value={originalLabel(record)} />
+          <InfoRow label="Format" value={record.format} />
+          <InfoRow label="Conditie" value={record.condition} />
         </div>
-      )}
+      </Section>
 
-      {/* Delete zone */}
-      {canEdit && (
-        <div style={deleteZoneStyle}>
-          {!confirmDelete ? (
-            <button
-              style={buttonStyle('danger')}
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Icon name="trash" size={15} /> Verwijderen
-            </button>
-          ) : (
-            <>
-              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Weet je het zeker?
-              </span>
+      <Section title="Aankoop">
+        <div style={infoGridStyle}>
+          <InfoRow label="Aankoopprijs" value={record.purchasePrice != null && record.purchasePrice !== '' ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />
+          <InfoRow label="Aankoopdatum" value={record.purchaseDate} />
+          <InfoRow label="Toegevoegd op" value={formatDate(record.dateAdded)} />
+        </div>
+      </Section>
+
+      <Section title="Tracklist">
+        {record.tracklist && record.tracklist.length > 0 ? (
+          <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {record.tracklist.map((track, i) => (
+              <li key={i} style={{ fontSize: '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
+                {track}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen tracklist beschikbaar.</p>
+        )}
+      </Section>
+
+      <Section title="Foto's">
+        {record.userPhotos && record.userPhotos.length > 0 ? (
+          <div style={photoGridStyle}>
+            {record.userPhotos.map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={url}
+                  alt={`Foto ${i + 1}`}
+                  style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: radius.sm, border: `1px solid ${colors.borderColor}`, display: 'block' }}
+                />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen foto's beschikbaar.</p>
+        )}
+      </Section>
+
+      <Section title="Notities">
+        {record.notes && record.notes.trim() ? (
+          <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+            {record.notes}
+          </p>
+        ) : (
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen notities.</p>
+        )}
+      </Section>
+
+      {/* Bevestiging bij verwijderen */}
+      {confirmDelete && (
+        <div
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          onClick={() => !deleteLoading && setConfirmDelete(false)}
+        >
+          <div
+            style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderColor}`, borderRadius: radius.lg, padding: '28px', width: '100%', maxWidth: '400px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px' }}>
+              Lp verwijderen?
+            </div>
+            <div style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '24px' }}>
+              “{record.artist} — {record.title}” wordt definitief verwijderd. Dit kan niet ongedaan gemaakt worden.
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button style={buttonStyle('secondary')} onClick={() => setConfirmDelete(false)} disabled={deleteLoading}>
+                Annuleer
+              </button>
               <button
-                style={{
-                  ...buttonStyle('danger'),
-                  opacity: deleteLoading ? 0.6 : 1,
-                  cursor: deleteLoading ? 'not-allowed' : 'pointer',
-                }}
+                style={{ ...buttonStyle('danger'), opacity: deleteLoading ? 0.6 : 1, cursor: deleteLoading ? 'not-allowed' : 'pointer' }}
                 onClick={handleDelete}
                 disabled={deleteLoading}
               >
                 {deleteLoading ? 'Bezig...' : 'Ja, verwijder'}
               </button>
-              <button
-                style={buttonStyle('secondary')}
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleteLoading}
-              >
-                Annuleer
-              </button>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -4,6 +4,7 @@ import { useToast } from '../ui/Toast.jsx';
 import { lookupRelease } from '../../firebase/lookup.js';
 import BarcodeScanner from './BarcodeScanner.jsx';
 import Icon from '../ui/Icon.jsx';
+import { originalLabel } from '../../utils/records.js';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
 
 const FORMAT_OPTIONS = ['LP', '7"', '10"', '12"', 'Box Set', 'Andere'];
@@ -483,6 +484,11 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               max="2099"
               placeholder="bijv. 2015 (heruitgave)"
             />
+          </Field>
+          <Field label="Origineel (automatisch)">
+            <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: colors.textSecondary, backgroundColor: colors.bgHover }}>
+              {originalLabel({ year, releaseYear }) || '—'}
+            </div>
           </Field>
           <Field label="Land">
             <Input
