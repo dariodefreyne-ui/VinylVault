@@ -13,6 +13,7 @@ import RecordAdd from './pages/RecordAdd.jsx';
 import RecordDetail from './pages/RecordDetail.jsx';
 import Wishlist from './pages/Wishlist.jsx';
 import Statistics from './pages/Statistics.jsx';
+import Profile from './pages/Profile.jsx';
 import Admin from './pages/Admin.jsx';
 
 // --- Route guards ---
@@ -116,6 +117,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Statistics />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/profiel',
+    element: (
+      <ProtectedRoute>
+        <Profile />
       </ProtectedRoute>
     ),
   },

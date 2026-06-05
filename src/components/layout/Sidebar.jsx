@@ -159,6 +159,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
           <NavItem to='/platen' icon='🎵' label='Alle Platen' />
           <NavItem to='/wishlist' icon='❤️' label='Wishlist' />
           <NavItem to='/statistieken' icon='📊' label='Statistieken' />
+          <NavItem to='/profiel' icon='👤' label='Profiel' />
 
           {/* Groep 2 — Beheer */}
           {isBeheerder(role) && (
