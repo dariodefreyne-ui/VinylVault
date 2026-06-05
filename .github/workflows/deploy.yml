@@ -59,6 +59,17 @@ jobs:
           channelId: live
           projectId: vinylvault-7b7f5
 
+      - name: Write functions env (Discogs token, optioneel)
+        env:
+          DISCOGS_TOKEN: ${{ secrets.DISCOGS_TOKEN }}
+        run: |
+          if [ -n "$DISCOGS_TOKEN" ]; then
+            printf 'DISCOGS_TOKEN=%s\n' "$DISCOGS_TOKEN" > functions/.env
+            echo "functions/.env aangemaakt met DISCOGS_TOKEN."
+          else
+            echo "Geen DISCOGS_TOKEN secret ingesteld — Discogs wordt overgeslagen, MusicBrainz-fallback wordt gebruikt."
+          fi
+
       - name: Deploy Firestore Rules, Storage Rules & Functions
         continue-on-error: true
         env:
