@@ -30,14 +30,16 @@ export default function Layout({ children }) {
   };
 
   const topBarStyle = {
-    height: '56px',
-    minHeight: '56px',
+    height: 'calc(56px + env(safe-area-inset-top))',
+    minHeight: 'calc(56px + env(safe-area-inset-top))',
     backgroundColor: colors.bgCard,
     borderBottom: `1px solid ${colors.borderColor}`,
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '0 16px',
+    paddingTop: 'env(safe-area-inset-top)',
+    paddingLeft: '16px',
+    paddingRight: '16px',
   };
 
   const hamburgerStyle = {
