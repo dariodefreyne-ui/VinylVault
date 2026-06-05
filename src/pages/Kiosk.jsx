@@ -4,6 +4,22 @@ import { useRecords } from '../hooks/useRecords.js';
 import Icon from '../components/ui/Icon.jsx';
 import { colors, radius, fonts, badgeStyle, buttonStyle, ownerColor } from '../styles/tokens.js';
 
+// Datum (ms) voor "recent aangekocht": aankoopdatum indien aanwezig, anders
+// toegevoegd-op. Ondersteunt zowel string-datums als Firestore-timestamps.
+function recordDateMs(r) {
+  if (r.purchaseDate) {
+    const d = new Date(r.purchaseDate);
+    if (!isNaN(d)) return d.getTime();
+  }
+  const da = r.dateAdded;
+  if (da && typeof da.toDate === 'function') return da.toDate().getTime();
+  if (da) {
+    const d = new Date(da);
+    if (!isNaN(d)) return d.getTime();
+  }
+  return 0;
+}
+
 // Schermvullende bezoekers-/kioskmodus: veeg (swipe) door de collectie met grote
 // cover-art. Draait achter de login (geen extra datatoegang), zonder zijbalk.
 export default function Kiosk() {
@@ -11,8 +27,18 @@ export default function Kiosk() {
   const { records, loading } = useRecords();
   const [search, setSearch] = useState('');
   const [owner, setOwner] = useState('');
+  const [genre, setGenre] = useState('');
+  const [sortMode, setSortMode] = useState('az'); // 'az' | 'recent'
   const [index, setIndex] = useState(0);
   const trackRef = useRef(null);
+
+  const allGenres = useMemo(() => {
+    const set = new Set();
+    for (const r of records) {
+      if (Array.isArray(r.genres)) r.genres.forEach((g) => set.add(g));
+    }
+    return [...set].sort((a, b) => a.localeCompare(b, 'nl', { sensitivity: 'base' }));
+  }, [records]);
 
   const ownerList = useMemo(() => {
     const byKey = new Map();
@@ -26,22 +52,37 @@ export default function Kiosk() {
   const items = useMemo(() => {
     let list = records;
     if (owner) list = list.filter((r) => (r.owner || '').toLowerCase() === owner.toLowerCase());
+    if (genre) list = list.filter((r) => Array.isArray(r.genres) && r.genres.includes(genre));
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
         (r) => (r.artist || '').toLowerCase().includes(q) || (r.title || '').toLowerCase().includes(q)
       );
     }
-    return [...list].sort((a, b) =>
-      (a.artistSort || a.artist || '').localeCompare(b.artistSort || b.artist || '', 'nl', { sensitivity: 'base' })
-    );
-  }, [records, owner, search]);
+    const sorted = [...list];
+    if (sortMode === 'recent') {
+      sorted.sort((a, b) => recordDateMs(b) - recordDateMs(a));
+    } else {
+      sorted.sort((a, b) =>
+        (a.artistSort || a.artist || '').localeCompare(b.artistSort || b.artist || '', 'nl', { sensitivity: 'base' })
+      );
+    }
+    return sorted;
+  }, [records, owner, genre, search, sortMode]);
 
-  // Reset naar begin wanneer de filter wijzigt
+  // Reset naar begin wanneer de filter/sortering wijzigt
   useEffect(() => {
     if (trackRef.current) trackRef.current.scrollTo({ left: 0 });
     setIndex(0);
-  }, [search, owner]);
+  }, [search, owner, genre, sortMode]);
+
+  function surprise() {
+    if (items.length === 0) return;
+    const i = Math.floor(Math.random() * items.length);
+    const el = trackRef.current;
+    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+    setIndex(i);
+  }
 
   function onScroll() {
     const el = trackRef.current;
@@ -173,17 +214,54 @@ export default function Kiosk() {
         </button>
       </div>
 
-      {/* Owner filter */}
-      {ownerList.length > 1 && (
-        <div style={{ ...chipRow, padding: '10px 16px 0' }}>
-          <span style={chip(owner === '')} onClick={() => setOwner('')}>Alles</span>
-          {ownerList.map((o) => (
-            <span key={o} style={chip(owner.toLowerCase() === o.toLowerCase())} onClick={() => setOwner(o)}>
-              {o}
-            </span>
-          ))}
+      {/* Filterbalk: eigenaar, genre, sortering, verras me */}
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', padding: '10px 16px 0' }}>
+        {ownerList.length > 1 && (
+          <div style={chipRow}>
+            <span style={chip(owner === '')} onClick={() => setOwner('')}>Alle eigenaars</span>
+            {ownerList.map((o) => (
+              <span key={o} style={chip(owner.toLowerCase() === o.toLowerCase())} onClick={() => setOwner(o)}>
+                {o}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {allGenres.length > 0 && (
+          <select
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+            style={{
+              backgroundColor: colors.bgCard,
+              border: `1px solid ${genre ? colors.brand : colors.borderColor}`,
+              borderRadius: '999px',
+              padding: '7px 14px',
+              color: genre ? colors.brandStrong : colors.textSecondary,
+              fontSize: '14px',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            <option value="">Alle genres</option>
+            {allGenres.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        )}
+
+        <div style={chipRow}>
+          <span style={chip(sortMode === 'az')} onClick={() => setSortMode('az')}>A–Z</span>
+          <span style={chip(sortMode === 'recent')} onClick={() => setSortMode('recent')}>Recent aangekocht</span>
         </div>
-      )}
+
+        <button
+          style={{ ...buttonStyle('primary'), marginLeft: 'auto' }}
+          onClick={surprise}
+          disabled={items.length === 0}
+        >
+          <Icon name="sparkle" size={16} /> Verras me
+        </button>
+      </div>
 
       {/* Swipe-track */}
       <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
