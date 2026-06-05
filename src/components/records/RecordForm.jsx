@@ -244,7 +244,10 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       }
     } catch (err) {
       console.error('RecordForm: lookup failed', err);
-      showToast('Metadata-lookup mislukt. Probeer later opnieuw.', 'error');
+      const msg = err?.code === 'functions/internal' || err?.message === 'internal'
+        ? 'Kon de metadata-service niet bereiken. Is de Cloud Function gedeployed? Probeer later opnieuw.'
+        : 'Metadata-lookup mislukt. Probeer later opnieuw.';
+      showToast(msg, 'error');
     } finally {
       setLooking(false);
     }

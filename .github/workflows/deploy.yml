@@ -69,5 +69,6 @@ jobs:
             npx --yes firebase-tools deploy \
             --only firestore:rules,storage,functions \
             --project vinylvault-7b7f5 \
+            --force \
             --non-interactive
           rm -f /tmp/firebase-sa.json
