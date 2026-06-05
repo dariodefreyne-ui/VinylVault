@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRecords } from '../hooks/useRecords.js';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -12,19 +12,38 @@ import { exportToExcel } from '../utils/importExcel.js';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 const SORT_OPTIONS = [
-  { value: 'artist_asc', label: 'Artiest A-Z' },
-  { value: 'artist_desc', label: 'Artiest Z-A' },
-  { value: 'newest', label: 'Nieuwste eerst' },
+  { value: 'artist_asc', label: 'Artiest A-Z, dan jaar' },
+  { value: 'artist_desc', label: 'Artiest Z-A, dan jaar' },
+  { value: 'year_asc', label: 'Jaar (oudste eerst)' },
+  { value: 'year_desc', label: 'Jaar (nieuwste eerst)' },
+  { value: 'newest', label: 'Recent toegevoegd' },
   { value: 'price_desc', label: 'Duurste eerst' },
 ];
+
+function cmpArtist(a, b) {
+  return (a.artistSort || a.artist || '').localeCompare(b.artistSort || b.artist || '', 'nl', { sensitivity: 'base' });
+}
+// Jaar-vergelijking; records zonder jaar gaan achteraan.
+function cmpYear(a, b, dir = 1) {
+  const ya = parseInt(a.year, 10);
+  const yb = parseInt(b.year, 10);
+  const va = isNaN(ya) ? null : ya;
+  const vb = isNaN(yb) ? null : yb;
+  if (va == null && vb == null) return 0;
+  if (va == null) return 1;
+  if (vb == null) return -1;
+  return (va - vb) * dir;
+}
 
 function sortRecords(list, sortValue) {
   const sorted = [...list];
   switch (sortValue) {
     case 'artist_desc':
-      return sorted.sort((a, b) =>
-        (b.artistSort || b.artist || '').localeCompare(a.artistSort || a.artist || '')
-      );
+      return sorted.sort((a, b) => -cmpArtist(a, b) || cmpYear(a, b, 1));
+    case 'year_asc':
+      return sorted.sort((a, b) => cmpYear(a, b, 1) || cmpArtist(a, b));
+    case 'year_desc':
+      return sorted.sort((a, b) => cmpYear(a, b, -1) || cmpArtist(a, b));
     case 'newest':
       return sorted.sort((a, b) => {
         const da = a.dateAdded ? (a.dateAdded.toDate ? a.dateAdded.toDate() : new Date(a.dateAdded)) : new Date(0);
@@ -35,10 +54,18 @@ function sortRecords(list, sortValue) {
       return sorted.sort((a, b) => (parseFloat(b.purchasePrice) || 0) - (parseFloat(a.purchasePrice) || 0));
     case 'artist_asc':
     default:
-      return sorted.sort((a, b) =>
-        (a.artistSort || a.artist || '').localeCompare(b.artistSort || b.artist || '')
-      );
+      // Eerst op artiest, daarna op jaar (oudste eerst).
+      return sorted.sort((a, b) => cmpArtist(a, b) || cmpYear(a, b, 1));
   }
+}
+
+// Onthoudt filters + scrollpositie zodat je na 'terug' niet bovenaan herbegint.
+const VIEW_KEY = 'vv:allrecords';
+function loadView() {
+  try { return JSON.parse(sessionStorage.getItem(VIEW_KEY)) || {}; } catch { return {}; }
+}
+function saveView(patch) {
+  try { sessionStorage.setItem(VIEW_KEY, JSON.stringify({ ...loadView(), ...patch })); } catch { /* negeren */ }
 }
 
 export default function AllRecords() {
@@ -52,17 +79,47 @@ export default function AllRecords() {
   const urlSearch = searchParams.get('search') || '';
   const urlOwner = searchParams.get('owner') || '';
 
-  const [search, setSearch] = useState(urlSearch);
+  // Begin vanuit URL-params indien aanwezig, anders vanuit de bewaarde view.
+  const savedView = useRef(loadView()).current;
+  const [search, setSearch] = useState(urlSearch || savedView.search || '');
   // Meerdere eigenaren tegelijk selecteerbaar (gemengde collectie). Lege selectie = alles.
-  const [selectedOwners, setSelectedOwners] = useState(urlOwner ? [urlOwner] : []);
-  const [genreFilter, setGenreFilter] = useState('');
-  const [sortValue, setSortValue] = useState('artist_asc');
+  const [selectedOwners, setSelectedOwners] = useState(
+    urlOwner ? [urlOwner] : (savedView.selectedOwners || [])
+  );
+  const [genreFilter, setGenreFilter] = useState(savedView.genreFilter || '');
+  const [sortValue, setSortValue] = useState(savedView.sortValue || 'artist_asc');
 
-  // Sync URL params on mount
+  // URL-params toepassen wanneer ze veranderen én aanwezig zijn (bv. via 'Bekijk collectie').
   useEffect(() => {
-    setSearch(urlSearch);
-    setSelectedOwners(urlOwner ? [urlOwner] : []);
+    if (urlSearch) setSearch(urlSearch);
+    if (urlOwner) setSelectedOwners([urlOwner]);
   }, [urlSearch, urlOwner]);
+
+  // Filters bewaren bij wijziging.
+  useEffect(() => {
+    saveView({ search, selectedOwners, genreFilter, sortValue });
+  }, [search, selectedOwners, genreFilter, sortValue]);
+
+  // Scrollpositie bewaren + herstellen (de scroll-container is de Layout-content).
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    const el = document.getElementById('vv-scroll');
+    if (!el) return undefined;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => saveView({ scrollTop: el.scrollTop }));
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => { el.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
+  }, []);
+  useEffect(() => {
+    if (restoredRef.current || loading) return;
+    const el = document.getElementById('vv-scroll');
+    const top = loadView().scrollTop;
+    if (el && top) requestAnimationFrame(() => { el.scrollTop = top; });
+    restoredRef.current = true;
+  }, [loading]);
 
   // Unieke eigenaren uit de records — hoofdletterongevoelig samengevoegd
   // ('Dario' en 'dario' tellen als één), met de eerst geziene schrijfwijze.

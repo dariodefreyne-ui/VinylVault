@@ -26,6 +26,7 @@ const FIELD_LABELS = {
   catalogNumber: 'Catalogusnummer',
   barcode: 'Barcode',
   condition: 'Conditie',
+  location: 'Locatie / kast',
   notes: 'Notities',
 };
 
@@ -68,7 +69,7 @@ export function findExisting(index, row) {
 // Velden die bij een bestaande lp aangevuld mogen worden (nooit overschrijven).
 const MERGE_FIELDS = [
   'purchasePrice', 'label', 'year', 'releaseYear', 'country',
-  'format', 'catalogNumber', 'barcode', 'condition', 'notes',
+  'format', 'catalogNumber', 'barcode', 'condition', 'location', 'notes',
 ];
 
 function isEmptyVal(v) {

@@ -104,7 +104,7 @@ export default function Layout({ children }) {
           </div>
 
           {/* Page content */}
-          <div className='layout-content' style={contentStyle}>
+          <div id='vv-scroll' className='layout-content' style={contentStyle}>
             {children}
           </div>
         </div>

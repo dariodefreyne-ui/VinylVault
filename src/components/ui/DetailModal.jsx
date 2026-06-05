@@ -14,8 +14,13 @@ export default function DetailModal({ open, onClose, title, children }) {
 
   const sheetStyle = {
     width: '100%',
-    maxHeight: '90vh',
+    // dvh i.p.v. vh + safe-area-padding zodat de onderkant (Opslaan/Annuleer)
+    // niet achter de mobiele browserbalk/home-indicator valt.
+    maxHeight: '90dvh',
     overflowY: 'auto',
+    overscrollBehavior: 'contain',
+    WebkitOverflowScrolling: 'touch',
+    paddingBottom: 'env(safe-area-inset-bottom)',
     backgroundColor: colors.bgCard,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
