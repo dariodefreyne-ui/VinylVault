@@ -20,7 +20,9 @@ export default function Home() {
   const searchRef = useRef(null);
 
   const uid = user?.uid;
-  const collectionLabel = userDoc?.collectionLabel;
+  // Val terug op displayName zodat legacy-gebruikers zonder collectionLabel hun
+  // records (owner: 'Dario'/'Papa') meteen als "van hen" herkend zien.
+  const collectionLabel = userDoc?.collectionLabel || userDoc?.displayName;
   const displayName = userDoc?.displayName || 'collega-verzamelaar';
 
   // Records die op de pagina getoond worden: eigen collectie of alles.
