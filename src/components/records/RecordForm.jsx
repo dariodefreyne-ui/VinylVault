@@ -264,24 +264,25 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   }
 
   function handleLookup() {
-    const params = barcode.trim()
+    const base = barcode.trim()
       ? { barcode: barcode.trim() }
       : catalogNumber.trim()
       ? { catalogNumber: catalogNumber.trim() }
       : artist.trim() || title.trim()
       ? { query: `${artist} ${title}`.trim() }
       : null;
-    if (!params) {
+    if (!base) {
       showToast('Vul eerst een barcode, catalogusnummer of artiest/titel in.', 'error');
       return;
     }
-    doLookup(params);
+    // Artiest/titel meesturen zodat de server ambigue matches (bv. korte catalogusnummers) kan verifiëren.
+    doLookup({ ...base, artist: artist.trim(), title: title.trim() });
   }
 
   function handleScanResult(value) {
     setScanOpen(false);
     setBarcode(value);
-    doLookup({ barcode: value });
+    doLookup({ barcode: value, artist: artist.trim(), title: title.trim() });
   }
 
   function handleCoverChange(e) {

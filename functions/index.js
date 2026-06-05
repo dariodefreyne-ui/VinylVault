@@ -73,6 +73,36 @@ function yearFromDate(value) {
   return m ? parseInt(m[0], 10) : null;
 }
 
+// ── Verificatie-helpers: voorkomt dat een korte/ambigue catalogusnummer (bv. 88562)
+// aan een verkeerde release gelinkt wordt. We checken of de artiest overeenkomt. ──
+function normText(s) {
+  return (s || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+function tokenSet(s) {
+  return new Set(normText(s).split(' ').filter((t) => t.length > 1));
+}
+// Aandeel van de verwachte tokens dat in de tekst voorkomt (0..1).
+function tokenOverlap(expected, text) {
+  const e = tokenSet(expected);
+  if (!e.size) return 1; // niets te verifiëren
+  const c = tokenSet(text);
+  let hit = 0;
+  for (const t of e) if (c.has(t)) hit += 1;
+  return hit / e.size;
+}
+// Escapet Lucene-speciale tekens voor MusicBrainz (titels met :, -, (), / …).
+function luceneEscape(s) {
+  return String(s).replace(/([+\-!(){}[\]^"~*?:\\/]|&&|\|\|)/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+const ARTIST_MATCH_THRESHOLD = 0.5;
+
 function normalizeDiscogs(rel, masterYear) {
   const artist = (rel.artists || []).map((a) => cleanArtistName(a.name)).join(', ');
   const firstLabel = (rel.labels || [])[0] || {};
@@ -126,54 +156,57 @@ async function tryDiscogsResults(results, token) {
   return null;
 }
 
-async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
-  const base = { token, per_page: '5' };
+async function lookupDiscogs({ barcode, catalogNumber, query, artist, title }, token) {
+  const base = { token, per_page: '10' };
 
   // Zoekopdrachten in volgorde van nauwkeurigheid.
-  // Bij catalogusnummer: eerst exacte catno-search, dan brede q-search als fallback.
-  // Zo vinden we ook oude platen zonder barcode waarbij Discogs catno inconsistent indexeert.
+  // Bij catalogusnummer: eerst catno + artiest (sterk), dan catno alleen, dan brede q.
   const searches = [];
   if (barcode) searches.push({ ...base, barcode });
   if (catalogNumber) {
+    if (artist) searches.push({ ...base, catno: catalogNumber, artist });
     searches.push({ ...base, catno: catalogNumber });
-    searches.push({ ...base, q: catalogNumber }); // brede fallback voor inconsistente indexering
+    searches.push({ ...base, q: catalogNumber });
   }
   if (query) searches.push({ ...base, q: query });
 
   for (const searchParams of searches) {
+    // Barcode is uniek → vertrouwen. catno/q is ambigu → verifiëren op artiest.
+    const ambiguous = !searchParams.barcode;
     const params = new URLSearchParams(searchParams);
     const search = await fetchJson(`https://api.discogs.com/database/search?${params}`);
     if (!search) continue;
 
-    const results = (search.results || []).filter((r) => r.resource_url);
-    if (!results.length) continue; // geen resultaten — volgende zoekopdracht proberen
+    let results = (search.results || []).filter((r) => r.resource_url);
+    if (!results.length) continue;
+
+    // Pre-filter op artiest (zoekresultaat-titel = "Artiest - Album").
+    if (ambiguous && artist) {
+      const matching = results.filter((r) => tokenOverlap(artist, r.title) >= ARTIST_MATCH_THRESHOLD);
+      if (!matching.length) continue; // geen kandidaat met juiste artiest → niet gokken
+      results = matching;
+    }
 
     const found = await tryDiscogsResults(results, token);
-    if (found) return found;
+    if (!found) continue;
 
-    // Alle resource_urls waren 404 — minimale fallback op zoekresultaat zelf
-    const first = results[0];
-    console.log('lookupDiscogs: alle resource_urls faalden, fallback op zoekresultaat');
-    return normalizeDiscogs({
-      title: first.title,
-      year: first.year,
-      country: first.country,
-      genres: first.genre,
-      styles: first.style,
-      labels: first.label ? [{ name: first.label[0], catno: first.catno }] : [],
-      formats: first.format ? [{ descriptions: first.format }] : [],
-      images: first.cover_image ? [{ uri: first.cover_image }] : [],
-    }, null);
+    // Eindverificatie: bij ambigue zoek moet de artiest van de release kloppen.
+    if (ambiguous && artist && tokenOverlap(artist, found.artist) < ARTIST_MATCH_THRESHOLD) {
+      continue;
+    }
+    return found;
   }
 
   return null;
 }
 
-async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
+async function lookupMusicBrainz({ barcode, catalogNumber, query, artist }) {
+  const ambiguous = !barcode;
+  const artistClause = artist ? ` AND artist:(${luceneEscape(artist)})` : '';
   let q;
-  if (barcode) q = `barcode:${barcode}`;
-  else if (catalogNumber) q = `catno:${catalogNumber}`;
-  else if (query) q = `release:${query}`;
+  if (barcode) q = `barcode:${luceneEscape(barcode)}`;
+  else if (catalogNumber) q = `catno:${luceneEscape(catalogNumber)}${artistClause}`;
+  else if (query) q = `${luceneEscape(query)}${artistClause}`;
   else return null;
 
   const search = await fetchJson(
@@ -181,7 +214,14 @@ async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
   );
   if (!search) return null;
 
-  const first = (search.releases || [])[0];
+  // Bij ambigue zoek: kies de eerste release waarvan de artiest klopt.
+  const releases = search.releases || [];
+  const first = ambiguous && artist
+    ? releases.find((rl) => {
+        const credit = (rl['artist-credit'] || []).map((c) => c.name || (c.artist && c.artist.name) || '').join(' ');
+        return tokenOverlap(artist, credit) >= ARTIST_MATCH_THRESHOLD;
+      })
+    : releases[0];
   if (!first) return null;
 
   const rel = await fetchJson(
@@ -189,7 +229,7 @@ async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
   );
   if (!rel) return null;
 
-  const artist = (rel['artist-credit'] || [])
+  const artistName = (rel['artist-credit'] || [])
     .map((c) => (typeof c === 'string' ? c : c.name + (c.joinphrase || '')))
     .join('')
     .trim();
@@ -201,7 +241,7 @@ async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
 
   return {
     source: 'musicbrainz',
-    artist,
+    artist: artistName,
     title: rel.title || '',
     label: labelInfo.label?.name || '',
     catalogNumber: labelInfo['catalog-number'] || '',
@@ -222,32 +262,31 @@ exports.lookupRelease = onCall(async (request) => {
   const barcode = (request.data?.barcode || '').toString().trim();
   const catalogNumber = (request.data?.catalogNumber || '').toString().trim();
   const query = (request.data?.query || '').toString().trim();
+  const artist = (request.data?.artist || '').toString().trim();
+  const title = (request.data?.title || '').toString().trim();
   if (!barcode && !catalogNumber && !query) {
     throw new HttpsError('invalid-argument', 'Geef een barcode, catalogusnummer of zoekterm.');
   }
 
-  const params = { barcode, catalogNumber, query };
+  const params = { barcode, catalogNumber, query, artist, title };
   const token = process.env.DISCOGS_TOKEN;
   const matchedBy = barcode ? 'barcode' : catalogNumber ? 'catalogusnummer' : 'artiest + titel';
 
-  try {
-    if (token) {
+  // Bronnen apart en veilig: een fout bij één lp mag niet als "internal" naar de
+  // client (dat lijkt op een deploy-probleem). Geen match → found:false.
+  if (token) {
+    try {
       const discogs = await lookupDiscogs(params, token);
       if (discogs) return { found: true, result: { ...discogs, matchedBy } };
+    } catch (err) {
+      console.error('lookupRelease Discogs error:', err.message);
     }
+  }
+  try {
     const mb = await lookupMusicBrainz(params);
     if (mb) return { found: true, result: { ...mb, matchedBy } };
-    return { found: false };
   } catch (err) {
-    console.error('lookupRelease error:', err.message);
-    if (token) {
-      try {
-        const mb = await lookupMusicBrainz(params);
-        if (mb) return { found: true, result: { ...mb, matchedBy } };
-      } catch (err2) {
-        console.error('lookupRelease MusicBrainz fallback error:', err2.message);
-      }
-    }
-    throw new HttpsError('internal', 'Metadata-lookup mislukt. Probeer later opnieuw.');
+    console.error('lookupRelease MusicBrainz error:', err.message);
   }
+  return { found: false };
 });

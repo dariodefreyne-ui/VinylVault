@@ -39,11 +39,13 @@ function buildUpdates(r, res) {
 }
 
 function paramsFor(r) {
+  // Artiest/titel altijd meesturen zodat de server ambigue matches kan verifiëren.
+  const extra = { artist: (r.artist || '').trim(), title: (r.title || '').trim() };
   const barcode = (r.barcode != null ? String(r.barcode) : '').trim();
-  if (barcode) return { barcode };
-  if (r.catalogNumber) return { catalogNumber: String(r.catalogNumber).trim() };
+  if (barcode) return { barcode, ...extra };
+  if (r.catalogNumber) return { catalogNumber: String(r.catalogNumber).trim(), ...extra };
   const q = `${r.artist || ''} ${r.title || ''}`.trim();
-  return q ? { query: q } : null;
+  return q ? { query: q, ...extra } : null;
 }
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
