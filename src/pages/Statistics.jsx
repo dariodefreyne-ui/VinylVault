@@ -32,7 +32,7 @@ const sectionTitleStyle = {
 
 const ownerFilters = [
   { key: 'alles', label: 'Alles' },
-  { key: 'dario', label: 'Dario' },
+  { key: 'dario', label: 'Dario De Freyne' },
   { key: 'papa', label: 'Papa' },
 ];
 
