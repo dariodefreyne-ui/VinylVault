@@ -48,12 +48,11 @@ const USER_AGENT = 'VinylVault/1.0 (https://vinylvault-7b7f5.web.app)';
 
 async function fetchJson(url, headers = {}) {
   const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT, ...headers } });
-  if (res.status === 404) return null; // graceful: niet crashen op ontbrekende releases
+  if (res.status === 404) return null;
   if (!res.ok) throw new Error(`HTTP ${res.status} voor ${url}`);
   return res.json();
 }
 
-// Discogs hangt soms een "(2)" achter dubbele artiestennamen — opkuisen.
 function cleanArtistName(name) {
   return (name || '').replace(/\s*\(\d+\)\s*$/, '').trim();
 }
@@ -68,7 +67,6 @@ function pickFormat(descriptions = [], fallback = '') {
   return fallback || '';
 }
 
-// Haalt een 4-cijferig jaartal uit "YYYY", "YYYY-MM-DD" of een nummer.
 function yearFromDate(value) {
   if (!value) return null;
   const m = String(value).match(/\d{4}/);
@@ -103,20 +101,7 @@ function normalizeDiscogs(rel, masterYear) {
   };
 }
 
-async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
-  const params = new URLSearchParams({ token, per_page: '5' });
-  if (barcode) params.set('barcode', barcode);
-  else if (catalogNumber) params.set('catno', catalogNumber);
-  else if (query) params.set('q', query);
-  else return null;
-
-  const search = await fetchJson(`https://api.discogs.com/database/search?${params}`);
-  if (!search) return null;
-
-  const results = (search.results || []).filter((r) => r.resource_url);
-  if (!results.length) return null;
-
-  // Probeer elk zoekresultaat tot één werkt (overgeslagen 404's)
+async function tryDiscogsResults(results, token) {
   for (const candidate of results) {
     const sep = candidate.resource_url.includes('?') ? '&' : '?';
     const rel = await fetchJson(`${candidate.resource_url}${sep}token=${encodeURIComponent(token)}`);
@@ -133,25 +118,55 @@ async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
         );
         masterYear = master?.year || null;
       } catch {
-        // master niet ophaalbaar — geen probleem, release-jaar wordt gebruikt
+        // master niet ophaalbaar — geen probleem
       }
     }
     return normalizeDiscogs(rel, masterYear);
   }
+  return null;
+}
 
-  // Alle resource_urls waren 404 — minimale fallback op zoekresultaat zelf
-  const first = results[0];
-  console.log('lookupDiscogs: alle resource_urls faalden, fallback op zoekresultaat');
-  return normalizeDiscogs({
-    title: first.title,
-    year: first.year,
-    country: first.country,
-    genres: first.genre,
-    styles: first.style,
-    labels: first.label ? [{ name: first.label[0], catno: first.catno }] : [],
-    formats: first.format ? [{ descriptions: first.format }] : [],
-    images: first.cover_image ? [{ uri: first.cover_image }] : [],
-  }, null);
+async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
+  const base = { token, per_page: '5' };
+
+  // Zoekopdrachten in volgorde van nauwkeurigheid.
+  // Bij catalogusnummer: eerst exacte catno-search, dan brede q-search als fallback.
+  // Zo vinden we ook oude platen zonder barcode waarbij Discogs catno inconsistent indexeert.
+  const searches = [];
+  if (barcode) searches.push({ ...base, barcode });
+  if (catalogNumber) {
+    searches.push({ ...base, catno: catalogNumber });
+    searches.push({ ...base, q: catalogNumber }); // brede fallback voor inconsistente indexering
+  }
+  if (query) searches.push({ ...base, q: query });
+
+  for (const searchParams of searches) {
+    const params = new URLSearchParams(searchParams);
+    const search = await fetchJson(`https://api.discogs.com/database/search?${params}`);
+    if (!search) continue;
+
+    const results = (search.results || []).filter((r) => r.resource_url);
+    if (!results.length) continue; // geen resultaten — volgende zoekopdracht proberen
+
+    const found = await tryDiscogsResults(results, token);
+    if (found) return found;
+
+    // Alle resource_urls waren 404 — minimale fallback op zoekresultaat zelf
+    const first = results[0];
+    console.log('lookupDiscogs: alle resource_urls faalden, fallback op zoekresultaat');
+    return normalizeDiscogs({
+      title: first.title,
+      year: first.year,
+      country: first.country,
+      genres: first.genre,
+      styles: first.style,
+      labels: first.label ? [{ name: first.label[0], catno: first.catno }] : [],
+      formats: first.format ? [{ descriptions: first.format }] : [],
+      images: first.cover_image ? [{ uri: first.cover_image }] : [],
+    }, null);
+  }
+
+  return null;
 }
 
 async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
@@ -225,7 +240,6 @@ exports.lookupRelease = onCall(async (request) => {
     return { found: false };
   } catch (err) {
     console.error('lookupRelease error:', err.message);
-    // Probeer alsnog MusicBrainz als Discogs faalde
     if (token) {
       try {
         const mb = await lookupMusicBrainz(params);
