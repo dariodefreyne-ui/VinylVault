@@ -1,4 +1,10 @@
-import * as XLSX from 'xlsx';
+// xlsx wordt dynamisch geladen (lazy) zodat de grote library niet in de
+// initiële bundle zit — enkel bij effectief importeren/exporteren.
+let xlsxPromise = null;
+function getXLSX() {
+  if (!xlsxPromise) xlsxPromise = import('xlsx');
+  return xlsxPromise;
+}
 
 export const COLUMN_MAPPINGS = {
   artist: ['artist', 'artiest', 'artist name', 'band'],
@@ -22,8 +28,9 @@ export function parseExcelFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await getXLSX();
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
@@ -106,7 +113,8 @@ export function sanitizeRow(row, mapping) {
  * exportToExcel(records, filename)
  * Exports an array of record objects to an .xlsx file and triggers download.
  */
-export function exportToExcel(records, filename = 'vinylvault-export.xlsx') {
+export async function exportToExcel(records, filename = 'vinylvault-export.xlsx') {
+  const XLSX = await getXLSX();
   const rows = records.map((r) => ({
     Artiest: r.artist || '',
     Titel: r.title || '',

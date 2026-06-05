@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
@@ -7,21 +8,28 @@ import PincodeLock from './components/layout/PincodeLock.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Pending from './pages/Pending.jsx';
-import Home from './pages/Home.jsx';
-import AllRecords from './pages/AllRecords.jsx';
-import RecordAdd from './pages/RecordAdd.jsx';
-import RecordDetail from './pages/RecordDetail.jsx';
-import Wishlist from './pages/Wishlist.jsx';
-import Statistics from './pages/Statistics.jsx';
-import Profile from './pages/Profile.jsx';
-import Admin from './pages/Admin.jsx';
+
+// Zware pagina's lazy laden zodat ze niet in de initiële bundle zitten
+// (o.a. recharts in Statistics en xlsx in de import/export-flow).
+const Home = lazy(() => import('./pages/Home.jsx'));
+const AllRecords = lazy(() => import('./pages/AllRecords.jsx'));
+const RecordAdd = lazy(() => import('./pages/RecordAdd.jsx'));
+const RecordDetail = lazy(() => import('./pages/RecordDetail.jsx'));
+const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
+const Statistics = lazy(() => import('./pages/Statistics.jsx'));
+const Profile = lazy(() => import('./pages/Profile.jsx'));
+const Admin = lazy(() => import('./pages/Admin.jsx'));
+
+function RouteFallback() {
+  return <div style={{ minHeight: '60vh' }} aria-busy='true' />;
+}
 
 // --- Route guards ---
 
 function ProtectedRoute({ children, requireBeheerder, requireAdmin }) {
   const { user, role, loading } = useAuth();
 
-  if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#0f0f0f' }} />;
+  if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#141110' }} />;
   if (!user) return <Navigate to='/login' replace />;
   if (!isActivated(role)) return <Navigate to='/pending' replace />;
   if (requireAdmin && !isAdmin(role)) return <Navigate to='/' replace />;
@@ -30,7 +38,7 @@ function ProtectedRoute({ children, requireBeheerder, requireAdmin }) {
   return (
     <Layout>
       <PincodeLock />
-      {children}
+      <Suspense fallback={<RouteFallback />}>{children}</Suspense>
     </Layout>
   );
 }
@@ -39,7 +47,7 @@ function PendingRoute({ children }) {
   const { user, role, loading } = useAuth();
 
   if (loading) {
-    return <div style={{ minHeight: '100vh', backgroundColor: '#0f0f0f' }} />;
+    return <div style={{ minHeight: '100vh', backgroundColor: '#141110' }} />;
   }
 
   if (!user) {
