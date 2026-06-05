@@ -46,6 +46,14 @@ const PATHS = {
   upload: <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />,
   download: <path d="M12 4v12M7 11l5 5 5-5M5 20h14" />,
   back: <path d="M14 6l-6 6 6 6" />,
+  forward: <path d="M10 6l6 6-6 6" />,
+  screen: (
+    <>
+      <rect x="3" y="4" width="18" height="12.5" rx="1.6" />
+      <path d="M8.5 20h7M12 16.5V20" />
+    </>
+  ),
+  close: <path d="M6 6l12 12M18 6 6 18" />,
   lock: (
     <>
       <rect x="5" y="11" width="14" height="9" rx="2" />

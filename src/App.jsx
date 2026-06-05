@@ -19,6 +19,7 @@ const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
 const Statistics = lazy(() => import('./pages/Statistics.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
+const Kiosk = lazy(() => import('./pages/Kiosk.jsx'));
 
 function RouteFallback() {
   return <div style={{ minHeight: '60vh' }} aria-busy='true' />;
@@ -26,7 +27,7 @@ function RouteFallback() {
 
 // --- Route guards ---
 
-function ProtectedRoute({ children, requireBeheerder, requireAdmin }) {
+function ProtectedRoute({ children, requireBeheerder, requireAdmin, bare }) {
   const { user, role, loading } = useAuth();
 
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#141110' }} />;
@@ -34,6 +35,11 @@ function ProtectedRoute({ children, requireBeheerder, requireAdmin }) {
   if (!isActivated(role)) return <Navigate to='/pending' replace />;
   if (requireAdmin && !isAdmin(role)) return <Navigate to='/' replace />;
   if (requireBeheerder && !isBeheerder(role)) return <Navigate to='/' replace />;
+
+  // Schermvullende modus (bv. kiosk): geen zijbalk of pincode-overlay.
+  if (bare) {
+    return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
+  }
 
   return (
     <Layout>
@@ -133,6 +139,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Profile />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/kiosk',
+    element: (
+      <ProtectedRoute bare>
+        <Kiosk />
       </ProtectedRoute>
     ),
   },
