@@ -276,6 +276,7 @@ export default function RecordDetail() {
     purchaseDate: record.purchaseDate || '',
     label: record.label || '',
     year: record.year != null ? record.year : '',
+    releaseYear: record.releaseYear != null ? record.releaseYear : '',
     country: record.country || '',
     format: record.format || 'LP',
     genres: record.genres || [],
@@ -356,6 +357,15 @@ export default function RecordDetail() {
           <InfoRow label="Barcode" value={record.barcode} />
           <InfoRow label="Land" value={record.country} />
           <InfoRow label="Jaar" value={record.year} />
+          <InfoRow
+            label="Uitgavejaar"
+            value={
+              record.releaseYear
+                ? record.releaseYear +
+                  (record.year && record.releaseYear !== record.year ? ' (heruitgave)' : '')
+                : null
+            }
+          />
           <InfoRow label="Format" value={record.format} />
           <InfoRow label="Conditie" value={record.condition} />
           <InfoRow label="Aankoopprijs" value={record.purchasePrice != null ? `€${parseFloat(record.purchasePrice).toFixed(2)}` : null} />

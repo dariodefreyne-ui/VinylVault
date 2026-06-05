@@ -67,7 +67,14 @@ function pickFormat(descriptions = [], fallback = '') {
   return fallback || '';
 }
 
-function normalizeDiscogs(rel) {
+// Haalt een 4-cijferig jaartal uit "YYYY", "YYYY-MM-DD" of een nummer.
+function yearFromDate(value) {
+  if (!value) return null;
+  const m = String(value).match(/\d{4}/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+function normalizeDiscogs(rel, masterYear) {
   const artist = (rel.artists || []).map((a) => cleanArtistName(a.name)).join(', ');
   const firstLabel = (rel.labels || [])[0] || {};
   const genres = [...new Set([...(rel.genres || []), ...(rel.styles || [])])];
@@ -75,13 +82,16 @@ function normalizeDiscogs(rel) {
     (i) => (i.type || '').toLowerCase() === 'barcode'
   );
   const firstFormat = (rel.formats || [])[0] || {};
+  // Persingsjaar van DEZE release (heruitgave); origineel jaar uit de master.
+  const releaseYear = yearFromDate(rel.released) || rel.year || null;
   return {
     source: 'discogs',
     artist: artist || (rel.title || '').split(' - ')[0] || '',
     title: rel.title || '',
     label: firstLabel.name || '',
     catalogNumber: firstLabel.catno || '',
-    year: rel.year || null,
+    year: masterYear || rel.year || null,
+    releaseYear,
     country: rel.country || '',
     format: pickFormat(firstFormat.descriptions, firstFormat.name),
     genres,
@@ -107,7 +117,19 @@ async function lookupDiscogs({ barcode, catalogNumber, query }, token) {
   if (first.resource_url) {
     const sep = first.resource_url.includes('?') ? '&' : '?';
     const rel = await fetchJson(`${first.resource_url}${sep}token=${encodeURIComponent(token)}`);
-    return normalizeDiscogs(rel);
+    // Origineel uitgavejaar ophalen uit de master (om reissues te onderscheiden).
+    let masterYear = null;
+    if (rel.master_id) {
+      try {
+        const master = await fetchJson(
+          `https://api.discogs.com/masters/${rel.master_id}?token=${encodeURIComponent(token)}`
+        );
+        masterYear = master.year || null;
+      } catch {
+        // master niet ophaalbaar — geen probleem, release-jaar wordt gebruikt
+      }
+    }
+    return normalizeDiscogs(rel, masterYear);
   }
   // Minimale fallback op het zoekresultaat zelf
   return normalizeDiscogs({
@@ -156,6 +178,7 @@ async function lookupMusicBrainz({ barcode, catalogNumber, query }) {
     label: labelInfo.label?.name || '',
     catalogNumber: labelInfo['catalog-number'] || '',
     year: rel.date ? parseInt(String(rel.date).slice(0, 4), 10) || null : null,
+    releaseYear: rel.date ? parseInt(String(rel.date).slice(0, 4), 10) || null : null,
     country: rel.country || '',
     format: media.format || '',
     genres: (rel.genres || []).map((g) => g.name),
