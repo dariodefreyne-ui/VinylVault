@@ -13,7 +13,7 @@
  * eigen offline-laag.
  */
 
-const VERSION = 'vv-v1';
+const VERSION = 'vv-v2';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const FONT_CACHE = `${VERSION}-fonts`;
@@ -21,11 +21,20 @@ const FONT_CACHE = `${VERSION}-fonts`;
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', (event) => {
+  // Caches de app-shell maar activeert NIET automatisch — de UpdateBanner in
+  // de app vraagt de gebruiker eerst om toestemming, waarna SKIP_WAITING wordt
+  // gestuurd en de nieuwe SW pas dan overschakelt.
   event.waitUntil(
     caches.open(SHELL_CACHE).then((cache) => cache.addAll(['/', '/index.html']))
       .catch(() => {})
   );
-  self.skipWaiting();
+});
+
+// De app stuurt dit bericht zodra de gebruiker op "Bijwerken" klikt.
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {

@@ -7,19 +7,19 @@ setupTokens();
 
 createRoot(document.getElementById('root')).render(<App />);
 
-// Service worker registreren (enkel in productie). Zorgt voor offline openen
-// en sneller herladen; updates worden automatisch opgepikt.
+// Service worker registreren (enkel in productie).
+// De UpdateBanner-component in App.jsx toont een melding wanneer een nieuwe
+// versie klaarstaat. Na SKIP_WAITING schakelt de SW over en herlaadt de pagina.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker
       .register('/sw.js')
       .catch((err) => console.error('Service worker registratie mislukt:', err));
 
+    // Herlaad zodra de nieuwe SW de controle overneemt (na klik op "Bijwerken").
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // Niet herladen bij de allereerste installatie, en geen herlaad-lus.
-      if (!hadController || refreshing) return;
+      if (refreshing) return;
       refreshing = true;
       window.location.reload();
     });

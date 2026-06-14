@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
@@ -9,6 +9,8 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Pending from './pages/Pending.jsx';
 import { colors } from './styles/tokens.js';
+import { useSwUpdate } from './hooks/useSwUpdate.js';
+import UpdateBanner from './components/ui/UpdateBanner.jsx';
 
 // Zware pagina's lazy laden zodat ze niet in de initiële bundle zitten
 // (o.a. recharts in Statistics en xlsx in de import/export-flow).
@@ -241,12 +243,29 @@ const router = createBrowserRouter([
 
 // --- App root ---
 
+function AppShell() {
+  const { hasUpdate, applyUpdate } = useSwUpdate();
+  const [dismissed, setDismissed] = useState(false);
+
+  return (
+    <>
+      <RouterProvider router={router} />
+      {hasUpdate && !dismissed && (
+        <UpdateBanner
+          onUpdate={applyUpdate}
+          onDismiss={() => setDismissed(true)}
+        />
+      )}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
         <ToastProvider>
-          <RouterProvider router={router} />
+          <AppShell />
         </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>
