@@ -226,6 +226,8 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
 
   const [looking, setLooking] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [showPriceWarning, setShowPriceWarning] = useState(false);
+  const [pendingData, setPendingData] = useState(null);
 
   const showToast = useToast();
   const coverInputRef = useRef(null);
@@ -307,12 +309,11 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
     setExtraFiles(files);
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  function buildData() {
     const matched = ownerOptions.find(
       (o) => o.label.toLowerCase() === owner.toLowerCase()
     );
-    onSubmit({
+    return {
       artist,
       title,
       owner,
@@ -335,7 +336,26 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       coverImageUrl,
       extraFiles,
       notes,
-    });
+    };
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const data = buildData();
+    if (price === '') {
+      setPendingData(data);
+      setShowPriceWarning(true);
+      return;
+    }
+    onSubmit(data);
+  }
+
+  function confirmSubmit() {
+    setShowPriceWarning(false);
+    if (pendingData) {
+      onSubmit(pendingData);
+      setPendingData(null);
+    }
   }
 
   const sectionWrapStyle = {
@@ -661,6 +681,61 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
         onClose={() => setScanOpen(false)}
         onResult={handleScanResult}
       />
+
+      {showPriceWarning && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+          onClick={() => setShowPriceWarning(false)}
+        >
+          <div
+            style={{
+              backgroundColor: colors.bgCard,
+              border: `1px solid ${colors.borderColor}`,
+              borderRadius: radius.lg,
+              padding: '28px 24px',
+              maxWidth: '420px',
+              width: '100%',
+              boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <span style={{ color: colors.brand, fontSize: '24px', lineHeight: 1 }}>⚠️</span>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: colors.textPrimary }}>
+                Geen aankoopprijs ingevuld
+              </h3>
+            </div>
+            <p style={{ margin: '0 0 24px', fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6 }}>
+              Je hebt geen aankoopprijs opgegeven. Dat is oké voor een cadeau of als je de prijs niet weet — maar wil je toch doorgaan zonder prijs?
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                style={buttonStyle('secondary')}
+                onClick={() => setShowPriceWarning(false)}
+              >
+                Terug
+              </button>
+              <button
+                type="button"
+                style={buttonStyle('primary')}
+                onClick={confirmSubmit}
+              >
+                Toch opslaan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

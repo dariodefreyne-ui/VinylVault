@@ -88,6 +88,7 @@ export default function AllRecords() {
   );
   const [genreFilter, setGenreFilter] = useState(savedView.genreFilter || '');
   const [sortValue, setSortValue] = useState(savedView.sortValue || 'artist_asc');
+  const [noPriceOnly, setNoPriceOnly] = useState(savedView.noPriceOnly || false);
 
   // URL-params toepassen wanneer ze veranderen én aanwezig zijn (bv. via 'Bekijk collectie').
   useEffect(() => {
@@ -97,8 +98,8 @@ export default function AllRecords() {
 
   // Filters bewaren bij wijziging.
   useEffect(() => {
-    saveView({ search, selectedOwners, genreFilter, sortValue });
-  }, [search, selectedOwners, genreFilter, sortValue]);
+    saveView({ search, selectedOwners, genreFilter, sortValue, noPriceOnly });
+  }, [search, selectedOwners, genreFilter, sortValue, noPriceOnly]);
 
   // Scrollpositie bewaren + herstellen (de scroll-container is de Layout-content).
   const restoredRef = useRef(false);
@@ -155,6 +156,11 @@ export default function AllRecords() {
     return [...set].sort();
   }, [records]);
 
+  const noPriceCount = useMemo(
+    () => records.filter((r) => r.purchasePrice == null || r.purchasePrice === '').length,
+    [records]
+  );
+
   // Apply filters
   const filtered = useMemo(() => {
     let list = records;
@@ -179,8 +185,12 @@ export default function AllRecords() {
       );
     }
 
+    if (noPriceOnly) {
+      list = list.filter((r) => r.purchasePrice == null || r.purchasePrice === '');
+    }
+
     return sortRecords(list, sortValue);
-  }, [records, search, selectedOwners, genreFilter, sortValue]);
+  }, [records, search, selectedOwners, genreFilter, sortValue, noPriceOnly]);
 
   // Stats for filtered list
   const filteredValue = filtered.reduce(
@@ -347,7 +357,7 @@ export default function AllRecords() {
         </div>
       </div>
 
-      {/* Rij 2: Eigenaar-chips */}
+      {/* Rij 2: Eigenaar-chips + prijs-filter */}
       <div style={{ ...chipRowStyle, marginBottom: '16px' }}>
         <Chip
           label="Alles"
@@ -364,6 +374,13 @@ export default function AllRecords() {
             onClick={() => toggleOwner(label)}
           />
         ))}
+        {noPriceCount > 0 && (
+          <Chip
+            label={`Zonder prijs (${noPriceCount})`}
+            active={noPriceOnly}
+            onClick={() => setNoPriceOnly((v) => !v)}
+          />
+        )}
       </div>
 
       {/* Stats bar */}
