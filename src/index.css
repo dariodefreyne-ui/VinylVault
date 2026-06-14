@@ -116,6 +116,13 @@ input, select, textarea {
 /* Bij grote grids: stop de stagger na item 12 om bulk-verschijning te vermijden */
 .vv-stagger-large > *:nth-child(n+13) { animation: none; opacity: 1; }
 
+/* Layout responsive utilities */
+.layout-topbar { display: none; }
+@media (max-width: 767px) {
+  .layout-topbar { display: flex !important; }
+  .layout-content { padding: 16px !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .vv-in, .vv-stagger > * { animation: none !important; }
 }

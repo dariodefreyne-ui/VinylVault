@@ -72,43 +72,23 @@ export default function Layout({ children }) {
   };
 
   return (
-    <>
-      <style>{`
-        .layout-topbar {
-          display: none;
-        }
-        @media (max-width: 767px) {
-          .layout-topbar {
-            display: flex !important;
-          }
-          .layout-content {
-            padding: 16px !important;
-          }
-        }
-      `}</style>
-
-      <div style={shellStyle}>
-        <Sidebar mobileOpen={mobileOpen} onClose={closeMobile} />
-
-        <div style={mainWrapStyle}>
-          {/* Mobile top bar */}
-          <div className='layout-topbar' style={topBarStyle}>
-            <button
-              style={hamburgerStyle}
-              onClick={openMobile}
-              aria-label='Menu openen'
-            >
-              ☰
-            </button>
-            <span style={topBarTitleStyle}>VinylVault</span>
-          </div>
-
-          {/* Page content */}
-          <div id='vv-scroll' className='layout-content' style={contentStyle}>
-            {children}
-          </div>
+    <div style={shellStyle}>
+      <Sidebar mobileOpen={mobileOpen} onClose={closeMobile} />
+      <div style={mainWrapStyle}>
+        <div className='layout-topbar' style={topBarStyle}>
+          <button
+            style={hamburgerStyle}
+            onClick={openMobile}
+            aria-label='Menu openen'
+          >
+            ☰
+          </button>
+          <span style={topBarTitleStyle}>VinylVault</span>
+        </div>
+        <div id='vv-scroll' className='layout-content' style={contentStyle}>
+          {children}
         </div>
       </div>
-    </>
+    </div>
   );
 }

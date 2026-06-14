@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
@@ -21,6 +21,61 @@ const Statistics = lazy(() => import('./pages/Statistics.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Kiosk = lazy(() => import('./pages/Kiosk.jsx'));
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            padding: '24px',
+            backgroundColor: colors.bgPrimary,
+            color: colors.textPrimary,
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '32px' }}>⚠️</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>Er ging iets mis</div>
+          <div style={{ fontSize: '14px', color: colors.textSecondary, maxWidth: '400px' }}>
+            Er trad een onverwachte fout op. Herlaad de pagina om opnieuw te proberen.
+          </div>
+          <button
+            style={{
+              marginTop: '8px',
+              padding: '10px 20px',
+              backgroundColor: colors.brand,
+              color: colors.brandText,
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+            onClick={() => window.location.reload()}
+          >
+            Pagina herladen
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function RouteFallback() {
   return (
@@ -188,10 +243,12 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <RouterProvider router={router} />
-      </ToastProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
