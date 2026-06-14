@@ -12,13 +12,15 @@ export default function Chip({ label, active, onClick }) {
   };
 
   return (
-    <span
-      style={style}
+    <button
+      type="button"
+      style={{ ...style, fontFamily: 'inherit' }}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      aria-pressed={active}
     >
       {label}
-    </span>
+    </button>
   );
 }

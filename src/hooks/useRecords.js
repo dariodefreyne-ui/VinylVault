@@ -12,6 +12,7 @@ import { db } from '../firebase/config.js';
 import { useAuth } from './useAuth.jsx';
 
 let cachedRecords = null;
+let cachedForUid = null;
 
 function generateSearchKeywords(artist, title) {
   const text = ((artist || '') + ' ' + (title || '')).toLowerCase();
@@ -22,7 +23,8 @@ function generateSearchKeywords(artist, title) {
 function computeKpis(records) {
   let totalValue = 0;
   for (const r of records) {
-    if (r.purchasePrice) totalValue += parseFloat(r.purchasePrice) || 0;
+    const qty = Number(r.quantity) || 1;
+    totalValue += (parseFloat(r.purchasePrice) || 0) * qty;
   }
   return {
     totalRecords: records.length,
@@ -32,6 +34,7 @@ function computeKpis(records) {
 
 export function invalidateRecordsCache() {
   cachedRecords = null;
+  cachedForUid = null;
 }
 
 export function useRecords() {
@@ -40,7 +43,21 @@ export function useRecords() {
   const [loading, setLoading] = useState(cachedRecords === null);
 
   useEffect(() => {
-    if (cachedRecords !== null) return;
+    const currentUid = user?.uid ?? null;
+    if (cachedRecords !== null && cachedForUid === currentUid) return;
+
+    // User switched — clear stale cache from previous session.
+    if (cachedForUid !== currentUid) {
+      cachedRecords = null;
+      cachedForUid = currentUid;
+      setRecords([]);
+      setLoading(true);
+    }
+
+    if (!currentUid) {
+      setLoading(false);
+      return;
+    }
 
     let cancelled = false;
 
@@ -57,6 +74,7 @@ export function useRecords() {
             return ka.localeCompare(kb);
           });
           cachedRecords = loaded;
+          cachedForUid = currentUid;
           setRecords(loaded);
           setLoading(false);
         }
@@ -70,7 +88,7 @@ export function useRecords() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   async function addRecord(data) {
     const keywords = generateSearchKeywords(data.artist, data.title);

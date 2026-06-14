@@ -208,14 +208,6 @@ export default function AllRecords() {
     margin: '0 0 24px 0',
   };
 
-  const actionBarStyle = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '12px',
-    alignItems: 'center',
-    marginBottom: '16px',
-  };
-
   const searchInnerStyle = {
     display: 'flex',
     alignItems: 'center',

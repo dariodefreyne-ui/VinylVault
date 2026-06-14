@@ -132,13 +132,17 @@ export default function RecordCard({ record }) {
     <div
       style={cardStyle}
       onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${artist} — ${title}`}
     >
       {/* Top row: thumbnail + info + owner badge */}
       <div style={topRowStyle}>
         {coverImageUrl ? (
-          <img src={coverImageUrl} alt={title} style={thumbStyle} />
+          <img src={coverImageUrl} alt={title} style={thumbStyle} loading="lazy" />
         ) : (
           <div style={placeholderStyle}>
             <Icon name="disc" size={30} strokeWidth={1.4} />
