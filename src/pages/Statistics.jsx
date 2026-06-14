@@ -8,16 +8,15 @@ import ValueChart from '../components/stats/ValueChart.jsx';
 import { colors, radius } from '../styles/tokens.js';
 
 const pageStyle = {
-  padding: '32px',
+  color: colors.textPrimary,
   maxWidth: '1100px',
-  margin: '0 auto',
 };
 
 const headingStyle = {
   fontSize: '26px',
   fontWeight: 700,
   color: colors.textPrimary,
-  marginBottom: '28px',
+  marginBottom: '20px',
 };
 
 const sectionStyle = {

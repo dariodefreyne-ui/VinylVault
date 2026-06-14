@@ -274,7 +274,7 @@ export default function AllRecords() {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="vv-in">
       {/* Page header */}
       <h1 style={headingStyle}>Alle Lp's</h1>
       <p style={subtitleStyle}>
@@ -283,9 +283,8 @@ export default function AllRecords() {
           : `${filtered.length} van ${records.length} lp's`}
       </p>
 
-      {/* Top action bar */}
-      <div style={actionBarStyle}>
-        {/* Search */}
+      {/* Rij 1: Zoekbalk + genre/sort selects + actieknoppen */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
         <div style={searchInnerStyle}>
           <span style={{ color: colors.textSecondary, display: 'flex' }}>
             <Icon name="search" size={17} />
@@ -299,30 +298,11 @@ export default function AllRecords() {
           />
         </div>
 
-        {/* Owner filter chips — meerdere tegelijk = gemengde collectie */}
-        <div style={chipRowStyle}>
-          <Chip
-            label="Alles"
-            active={selectedOwners.length === 0}
-            onClick={() => setSelectedOwners([])}
-          />
-          {ownerList.map((label) => (
-            <Chip
-              key={label}
-              label={label}
-              active={selectedOwners.some(
-                (o) => o.toLowerCase() === label.toLowerCase()
-              )}
-              onClick={() => toggleOwner(label)}
-            />
-          ))}
-        </div>
-
-        {/* Genre select */}
         <select
           style={selectStyle}
           value={genreFilter}
           onChange={(e) => setGenreFilter(e.target.value)}
+          aria-label="Filter op genre"
         >
           <option value="">Alle genres</option>
           {allGenres.map((g) => (
@@ -330,49 +310,68 @@ export default function AllRecords() {
           ))}
         </select>
 
-        {/* Sort select */}
         <select
           style={selectStyle}
           value={sortValue}
           onChange={(e) => setSortValue(e.target.value)}
+          aria-label="Sorteervolgorde"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
 
-        {/* Export button (alle gebruikers) */}
-        <button
-          style={buttonStyle('secondary')}
-          onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
-          disabled={loading || filtered.length === 0}
-        >
-          <Icon name="upload" size={15} /> Exporteer
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            style={buttonStyle('secondary')}
+            onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
+            disabled={loading || filtered.length === 0}
+          >
+            <Icon name="upload" size={15} /> Exporteer
+          </button>
 
-        {/* Add + Import buttons (beheerder only) */}
-        {isBeheerder(role) && (
-          <>
-            <button
-              style={buttonStyle('primary')}
-              onClick={() => navigate('/platen/nieuw')}
-            >
-              <Icon name="plus" size={15} /> Lp toevoegen
-            </button>
-            <button
-              style={buttonStyle('secondary')}
-              onClick={() => setImportOpen(true)}
-            >
-              <Icon name="download" size={15} /> Importeer
-            </button>
-            <button
-              style={buttonStyle('secondary')}
-              onClick={() => setEnrichOpen(true)}
-            >
-              <Icon name="search" size={15} /> Metadata aanvullen
-            </button>
-          </>
-        )}
+          {isBeheerder(role) && (
+            <>
+              <button
+                style={buttonStyle('primary')}
+                onClick={() => navigate('/platen/nieuw')}
+              >
+                <Icon name="plus" size={15} /> Lp toevoegen
+              </button>
+              <button
+                style={buttonStyle('secondary')}
+                onClick={() => setImportOpen(true)}
+              >
+                <Icon name="download" size={15} /> Importeer
+              </button>
+              <button
+                style={buttonStyle('secondary')}
+                onClick={() => setEnrichOpen(true)}
+              >
+                <Icon name="search" size={15} /> Metadata aanvullen
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Rij 2: Eigenaar-chips */}
+      <div style={{ ...chipRowStyle, marginBottom: '16px' }}>
+        <Chip
+          label="Alles"
+          active={selectedOwners.length === 0}
+          onClick={() => setSelectedOwners([])}
+        />
+        {ownerList.map((label) => (
+          <Chip
+            key={label}
+            label={label}
+            active={selectedOwners.some(
+              (o) => o.toLowerCase() === label.toLowerCase()
+            )}
+            onClick={() => toggleOwner(label)}
+          />
+        ))}
       </div>
 
       {/* Stats bar */}
@@ -388,7 +387,7 @@ export default function AllRecords() {
       ) : filtered.length === 0 ? (
         <p style={emptyStyle}>Geen lp's gevonden.</p>
       ) : (
-        <div style={gridStyle} className="vv-stagger">
+        <div style={gridStyle} className="vv-stagger vv-stagger-large">
           {filtered.map((record) => (
             <RecordCard key={record.id} record={record} />
           ))}

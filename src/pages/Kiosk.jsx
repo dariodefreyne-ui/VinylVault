@@ -20,6 +20,40 @@ function recordDateMs(r) {
   return 0;
 }
 
+function NavButton({ side, onClick, label, children }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      style={{
+        position: 'absolute',
+        top: '50%',
+        [side]: '16px',
+        transform: 'translateY(-50%)',
+        width: '52px',
+        height: '52px',
+        borderRadius: '50%',
+        border: '1px solid rgba(242, 235, 221, 0.25)',
+        backgroundColor: hovered ? 'rgba(242, 235, 221, 0.2)' : 'rgba(242, 235, 221, 0.1)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        color: colors.textPrimary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        zIndex: 5,
+        transition: 'background-color 0.18s ease',
+      }}
+      onClick={onClick}
+      aria-label={label}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
 // Schermvullende bezoekers-/kioskmodus: veeg (swipe) door de collectie met grote
 // cover-art. Draait achter de login (geen extra datatoegang), zonder zijbalk.
 export default function Kiosk() {
@@ -174,23 +208,6 @@ export default function Kiosk() {
     border: `1px solid ${colors.borderColor}`,
   };
 
-  const navBtn = (side) => ({
-    position: 'absolute',
-    top: '50%',
-    [side]: '10px',
-    transform: 'translateY(-50%)',
-    width: '52px',
-    height: '52px',
-    borderRadius: '50%',
-    border: `1px solid ${colors.borderColor}`,
-    backgroundColor: 'rgba(28,24,21,0.8)',
-    color: colors.textPrimary,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    zIndex: 5,
-  });
 
   return (
     <div style={pageStyle}>
@@ -312,8 +329,12 @@ export default function Kiosk() {
               ))}
             </div>
 
-            <button style={navBtn('left')} onClick={() => go(-1)} aria-label="Vorige"><Icon name="back" size={22} /></button>
-            <button style={navBtn('right')} onClick={() => go(1)} aria-label="Volgende"><Icon name="forward" size={22} /></button>
+            <NavButton side="left" onClick={() => go(-1)} label="Vorige">
+              <Icon name="back" size={22} />
+            </NavButton>
+            <NavButton side="right" onClick={() => go(1)} label="Volgende">
+              <Icon name="forward" size={22} />
+            </NavButton>
 
             <div style={{
               position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)',

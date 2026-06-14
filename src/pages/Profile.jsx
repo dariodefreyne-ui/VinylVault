@@ -10,9 +10,7 @@ import { ownerLabelOf } from '../utils/owners.js';
 import { colors, radius, buttonStyle, badgeStyle } from '../styles/tokens.js';
 
 const pageStyle = {
-  padding: '32px',
   maxWidth: '900px',
-  margin: '0 auto',
   color: colors.textPrimary,
 };
 

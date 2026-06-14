@@ -113,6 +113,9 @@ input, select, textarea {
 .vv-stagger > *:nth-child(8)  { animation-delay: 0.31s; }
 .vv-stagger > *:nth-child(n+9){ animation-delay: 0.35s; }
 
+/* Bij grote grids: stop de stagger na item 12 om bulk-verschijning te vermijden */
+.vv-stagger-large > *:nth-child(n+13) { animation: none; opacity: 1; }
+
 @media (prefers-reduced-motion: reduce) {
   .vv-in, .vv-stagger > * { animation: none !important; }
 }
