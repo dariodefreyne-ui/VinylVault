@@ -167,9 +167,8 @@ export default function RecordDetail() {
   }
 
   const pageStyle = {
-    minHeight: '100vh',
-    backgroundColor: colors.bgPrimary,
-    padding: '24px',
+    color: colors.textPrimary,
+    maxWidth: '1100px',
   };
 
   const headerSectionStyle = {
@@ -306,7 +305,9 @@ export default function RecordDetail() {
     justifyContent: 'space-between',
     gap: '10px',
     flexWrap: 'wrap',
-    backgroundColor: colors.bgPrimary,
+    backgroundColor: 'rgba(20, 17, 16, 0.88)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     borderBottom: `1px solid ${colors.borderColor}`,
     padding: '12px 0',
     marginBottom: '20px',

@@ -174,91 +174,97 @@ export default function Home() {
   };
 
   return (
-    <div style={pageStyle} className="vv-in">
-      {/* Page header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
-        <div>
-          <h1 style={headingStyle}>
-            {showAll ? 'Alle collecties' : `Welkom, ${displayName}`}
-          </h1>
-          <p style={subtitleStyle}>
-            {loading ? '…' : kpis.totalRecords}{' '}
-            {showAll ? "lp's in alle collecties" : "lp's in jouw collectie"}
-          </p>
-        </div>
-        <button
-          style={buttonStyle('secondary')}
-          onClick={() => setShowAll((v) => !v)}
+    <div style={pageStyle}>
+      {/* Header */}
+      <div className="vv-in" style={{ animationDelay: '0s' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
         >
-          {showAll
-            ? <><Icon name="user" size={15} /> Toon mijn collectie</>
-            : <><Icon name="users" size={15} /> Toon alle collecties</>}
-        </button>
+          <div>
+            <h1 style={headingStyle}>
+              {showAll ? 'Alle collecties' : `Welkom, ${displayName}`}
+            </h1>
+            <p style={subtitleStyle}>
+              {loading ? '…' : kpis.totalRecords}{' '}
+              {showAll ? "lp's in alle collecties" : "lp's in jouw collectie"}
+            </p>
+          </div>
+          <button
+            style={buttonStyle('secondary')}
+            onClick={() => setShowAll((v) => !v)}
+          >
+            {showAll
+              ? <><Icon name="user" size={15} /> Toon mijn collectie</>
+              : <><Icon name="users" size={15} /> Toon alle collecties</>}
+          </button>
+        </div>
       </div>
 
       {/* Search bar */}
-      <div style={searchWrapStyle}>
-        <div style={searchInnerStyle}>
-          <span style={{ color: colors.textSecondary, display: 'flex' }}>
-            <Icon name="search" size={18} />
-          </span>
-          <input
-            ref={searchRef}
-            style={searchInputStyle}
-            type="text"
-            placeholder="Zoek op artiest of titel..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-          />
-        </div>
-
-        {showSuggestions && (
-          <div style={dropdownStyle}>
-            {artistSuggestions.map((artist) => (
-              <SuggestionItem
-                key={artist}
-                label={artist}
-                baseStyle={suggestionItemStyle}
-                onClick={() => handleSuggestionClick(artist)}
-              />
-            ))}
+      <div className="vv-in" style={{ animationDelay: '0.05s' }}>
+        <div style={searchWrapStyle}>
+          <div style={searchInnerStyle}>
+            <span style={{ color: colors.textSecondary, display: 'flex' }}>
+              <Icon name="search" size={18} />
+            </span>
+            <input
+              ref={searchRef}
+              style={searchInputStyle}
+              type="text"
+              placeholder="Zoek op artiest of titel..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+            />
           </div>
-        )}
+
+          {showSuggestions && (
+            <div style={dropdownStyle}>
+              {artistSuggestions.map((artist) => (
+                <SuggestionItem
+                  key={artist}
+                  label={artist}
+                  baseStyle={suggestionItemStyle}
+                  onClick={() => handleSuggestionClick(artist)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI strip */}
-      <div style={kpiRowStyle}>
-        <KpiTegel
-          label={showAll ? "Totaal lp's" : "Mijn lp's"}
-          value={kpis.totalRecords}
-          onClick={() => navigate('/platen')}
-        />
-        <KpiTegel
-          label={showAll ? 'Totale waarde' : 'Mijn waarde'}
-          value={'€' + kpis.totalValue.toFixed(2)}
-          color="green"
-        />
-        <KpiTegel
-          label="Wishlist actief"
-          value={activeWishlistCount}
-          color="orange"
-          onClick={() => navigate('/wishlist')}
-        />
+      <div className="vv-in" style={{ animationDelay: '0.1s' }}>
+        <div style={kpiRowStyle}>
+          <KpiTegel
+            label={showAll ? "Totaal lp's" : "Mijn lp's"}
+            value={kpis.totalRecords}
+            onClick={() => navigate('/platen')}
+          />
+          <KpiTegel
+            label={showAll ? 'Totale waarde' : 'Mijn waarde'}
+            value={'€' + kpis.totalValue.toFixed(2)}
+            color="green"
+          />
+          <KpiTegel
+            label="Wishlist actief"
+            value={activeWishlistCount}
+            color="orange"
+            onClick={() => navigate('/wishlist')}
+          />
+        </div>
       </div>
 
       {/* Nieuw toegevoegd */}
-      <div>
+      <div className="vv-in" style={{ animationDelay: '0.15s' }}>
         <div style={sectionTitleStyle}>Nieuw toegevoegd</div>
         {loading ? (
           <p style={emptyStyle}>Laden...</p>

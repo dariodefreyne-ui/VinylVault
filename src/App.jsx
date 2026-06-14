@@ -8,6 +8,7 @@ import PincodeLock from './components/layout/PincodeLock.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Pending from './pages/Pending.jsx';
+import { colors } from './styles/tokens.js';
 
 // Zware pagina's lazy laden zodat ze niet in de initiële bundle zitten
 // (o.a. recharts in Statistics en xlsx in de import/export-flow).
@@ -22,7 +23,30 @@ const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Kiosk = lazy(() => import('./pages/Kiosk.jsx'));
 
 function RouteFallback() {
-  return <div style={{ minHeight: '60vh' }} aria-busy='true' />;
+  return (
+    <div
+      style={{
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      role="status"
+      aria-label="Pagina laden…"
+    >
+      <div
+        style={{
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          border: `3px solid ${colors.borderColor}`,
+          borderTopColor: colors.brand,
+          animation: 'spin 0.8s linear infinite',
+        }}
+      />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 }
 
 // --- Route guards ---
