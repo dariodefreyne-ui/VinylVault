@@ -212,7 +212,7 @@ export default function Statistics() {
                           style={{
                             fontSize: '13px',
                             color: colors.textPrimary,
-                            minWidth: '140px',
+                            minWidth: 'clamp(70px, 25%, 140px)',
                             flexShrink: 0,
                           }}
                         >

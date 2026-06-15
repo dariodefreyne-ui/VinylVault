@@ -120,7 +120,10 @@ input, select, textarea {
 .layout-topbar { display: none; }
 @media (max-width: 767px) {
   .layout-topbar { display: flex !important; }
-  .layout-content { padding: 16px !important; }
+  .layout-content {
+    padding: 16px !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
