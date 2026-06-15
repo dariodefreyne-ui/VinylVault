@@ -180,8 +180,8 @@ export default function RecordDetail() {
   };
 
   const coverStyle = {
-    width: '200px',
-    height: '200px',
+    width: 'clamp(120px, 30vw, 200px)',
+    height: 'clamp(120px, 30vw, 200px)',
     borderRadius: radius.md,
     objectFit: 'cover',
     border: `1px solid ${colors.borderColor}`,
@@ -189,8 +189,8 @@ export default function RecordDetail() {
   };
 
   const coverPlaceholderStyle = {
-    width: '200px',
-    height: '200px',
+    width: 'clamp(120px, 30vw, 200px)',
+    height: 'clamp(120px, 30vw, 200px)',
     borderRadius: radius.md,
     backgroundColor: colors.bgCard,
     border: `1px solid ${colors.borderColor}`,

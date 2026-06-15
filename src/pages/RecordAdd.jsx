@@ -80,45 +80,29 @@ export default function RecordAdd() {
   }
 
   const pageStyle = {
-    minHeight: '100vh',
-    backgroundColor: colors.bgPrimary,
-    padding: '24px',
-  };
-
-  const headerStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    marginBottom: '32px',
-  };
-
-  const pageTitleStyle = {
-    fontSize: '24px',
-    fontWeight: 700,
     color: colors.textPrimary,
-    margin: 0,
-  };
-
-  const cardStyle = {
-    backgroundColor: colors.bgCard,
-    border: `1px solid ${colors.borderColor}`,
-    borderRadius: '10px',
-    padding: '24px',
     maxWidth: '960px',
   };
 
   return (
     <div style={pageStyle}>
-      <div style={headerStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
         <button
           style={buttonStyle('ghost')}
           onClick={() => navigate('/platen')}
         >
           ← Terug naar lp's
         </button>
-        <h1 style={pageTitleStyle}>Lp toevoegen</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+          Lp toevoegen
+        </h1>
       </div>
-      <div style={cardStyle}>
+      <div style={{
+        backgroundColor: colors.bgCard,
+        border: `1px solid ${colors.borderColor}`,
+        borderRadius: '10px',
+        padding: '24px',
+      }}>
         <RecordForm
           onSubmit={handleSubmit}
           onCancel={() => navigate('/platen')}

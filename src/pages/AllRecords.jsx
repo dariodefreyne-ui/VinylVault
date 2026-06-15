@@ -285,8 +285,8 @@ export default function AllRecords() {
           : `${filtered.length} van ${records.length} lp's`}
       </p>
 
-      {/* Rij 1: Zoekbalk + genre/sort selects + actieknoppen */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
+      {/* Rij 1a: Zoekbalk + filters */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
         <div style={searchInnerStyle}>
           <span style={{ color: colors.textSecondary, display: 'flex' }}>
             <Icon name="search" size={17} />
@@ -301,7 +301,7 @@ export default function AllRecords() {
         </div>
 
         <select
-          style={selectStyle}
+          style={{ ...selectStyle, flex: '1 1 120px', minWidth: '100px' }}
           value={genreFilter}
           onChange={(e) => setGenreFilter(e.target.value)}
           aria-label="Filter op genre"
@@ -313,7 +313,7 @@ export default function AllRecords() {
         </select>
 
         <select
-          style={selectStyle}
+          style={{ ...selectStyle, flex: '1 1 150px', minWidth: '130px' }}
           value={sortValue}
           onChange={(e) => setSortValue(e.target.value)}
           aria-label="Sorteervolgorde"
@@ -322,39 +322,40 @@ export default function AllRecords() {
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+      </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button
-            style={buttonStyle('secondary')}
-            onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
-            disabled={loading || filtered.length === 0}
-          >
-            <Icon name="upload" size={15} /> Exporteer
-          </button>
+      {/* Rij 1b: Actieknoppen */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+        <button
+          style={buttonStyle('secondary')}
+          onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
+          disabled={loading || filtered.length === 0}
+        >
+          <Icon name="upload" size={15} /> Exporteer
+        </button>
 
-          {isBeheerder(role) && (
-            <>
-              <button
-                style={buttonStyle('primary')}
-                onClick={() => navigate('/platen/nieuw')}
-              >
-                <Icon name="plus" size={15} /> Lp toevoegen
-              </button>
-              <button
-                style={buttonStyle('secondary')}
-                onClick={() => setImportOpen(true)}
-              >
-                <Icon name="download" size={15} /> Importeer
-              </button>
-              <button
-                style={buttonStyle('secondary')}
-                onClick={() => setEnrichOpen(true)}
-              >
-                <Icon name="search" size={15} /> Metadata aanvullen
-              </button>
-            </>
-          )}
-        </div>
+        {isBeheerder(role) && (
+          <>
+            <button
+              style={buttonStyle('primary')}
+              onClick={() => navigate('/platen/nieuw')}
+            >
+              <Icon name="plus" size={15} /> Lp toevoegen
+            </button>
+            <button
+              style={buttonStyle('secondary')}
+              onClick={() => setImportOpen(true)}
+            >
+              <Icon name="download" size={15} /> Importeer
+            </button>
+            <button
+              style={buttonStyle('secondary')}
+              onClick={() => setEnrichOpen(true)}
+            >
+              <Icon name="search" size={15} /> Metadata aanvullen
+            </button>
+          </>
+        )}
       </div>
 
       {/* Rij 2: Eigenaar-chips + prijs-filter */}

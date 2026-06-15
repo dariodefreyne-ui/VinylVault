@@ -20,7 +20,7 @@ export default function KpiTegel({ label, value, onClick, color }) {
     transition: 'background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease',
     transform: hovered && onClick ? 'translateY(-2px)' : 'translateY(0)',
     boxShadow: shadows.card,
-    minWidth: '120px',
+    minWidth: '80px',
     flex: '1 1 0',
   };
 
@@ -34,7 +34,7 @@ export default function KpiTegel({ label, value, onClick, color }) {
 
   const valueStyle = {
     fontFamily: fonts.display,
-    fontSize: '32px',
+    fontSize: 'clamp(20px, 5vw, 32px)',
     fontWeight: 600,
     color: color && accentMap[color] ? accentMap[color] : colors.textPrimary,
     lineHeight: 1.05,

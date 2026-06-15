@@ -6,9 +6,9 @@ export default function UpdateBanner({ onUpdate, onDismiss }) {
     <div
       style={{
         position: 'fixed',
-        bottom: '80px',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        bottom: 'calc(80px + env(safe-area-inset-bottom))',
+        left: '16px',
+        right: '16px',
         zIndex: 9998,
         backgroundColor: colors.bgCard,
         border: `1px solid ${colors.brand}`,
@@ -18,8 +18,6 @@ export default function UpdateBanner({ onUpdate, onDismiss }) {
         alignItems: 'center',
         gap: '14px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(217,160,91,0.15)',
-        maxWidth: 'calc(100vw - 32px)',
-        whiteSpace: 'nowrap',
         animation: 'vv-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both',
       }}
       role="status"

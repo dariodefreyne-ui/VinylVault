@@ -66,9 +66,11 @@ export default function Layout({ children }) {
   const contentStyle = {
     flex: 1,
     overflowY: 'auto',
+    overflowX: 'hidden',
     overscrollBehavior: 'contain',
     WebkitOverflowScrolling: 'touch',
     padding: '24px',
+    minWidth: 0,
   };
 
   return (

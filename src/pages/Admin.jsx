@@ -13,9 +13,8 @@ import Icon from '../components/ui/Icon.jsx';
 import { colors, radius, buttonStyle } from '../styles/tokens.js';
 
 const pageStyle = {
-  padding: '32px',
   maxWidth: '1100px',
-  margin: '0 auto',
+  color: colors.textPrimary,
 };
 
 const headingStyle = {
