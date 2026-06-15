@@ -94,14 +94,14 @@ function SidebarContent({ style, onClose }) {
 
   return (
     <div style={style}>
-      {/* Logo / App title */}
+      {/* Logo / App title — paddingTop houdt rekening met Dynamic Island / notch */}
       <div
         className='vv-logo'
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '11px',
-          padding: '20px 16px 14px',
+          padding: 'max(20px, calc(env(safe-area-inset-top) + 12px)) 16px 14px',
           borderBottom: `1px solid ${colors.borderColor}`,
         }}
       >
@@ -146,11 +146,12 @@ function SidebarContent({ style, onClose }) {
         )}
       </nav>
 
-      {/* Footer: user info + logout */}
+      {/* Footer: user info + logout — paddingBottom voor home-indicator */}
       <div
         style={{
           borderTop: `1px solid ${colors.borderColor}`,
           padding: '12px 16px',
+          paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom) + 8px))',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
