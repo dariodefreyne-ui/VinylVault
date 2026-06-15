@@ -13,7 +13,7 @@
  * eigen offline-laag.
  */
 
-const VERSION = 'vv-v2';
+const VERSION = '__VV_BUILD__';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const FONT_CACHE = `${VERSION}-fonts`;
