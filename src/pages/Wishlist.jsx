@@ -7,6 +7,7 @@ import WishlistForm from '../components/wishlist/WishlistForm.jsx';
 import DetailModal from '../components/ui/DetailModal.jsx';
 import Chip from '../components/ui/Chip.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import { useToast } from '../components/ui/Toast.jsx';
 import { colors, buttonStyle } from '../styles/tokens.js';
 
 const STATUS_FILTERS = [
@@ -17,8 +18,10 @@ const STATUS_FILTERS = [
 ];
 
 export default function Wishlist() {
-  const { items, loading, addWishlistItem, updateWishlistItem } = useWishlist();
+  const { items, loading, addWishlistItem, updateWishlistItem, deleteWishlistItem } = useWishlist();
   const { role } = useAuth();
+  const canManage = isBeheerder(role);
+  const showToast = useToast();
 
   const [statusFilter, setStatusFilter] = useState('alles');
   const [ownerFilter, setOwnerFilter] = useState('alles');
@@ -76,6 +79,16 @@ export default function Wishlist() {
   function closeModal() {
     setModalOpen(false);
     setEditItem(null);
+  }
+
+  async function handleDelete(item) {
+    try {
+      await deleteWishlistItem(item.id);
+      showToast('Item van wishlist verwijderd.', 'success');
+    } catch (err) {
+      console.error('Wishlist delete error:', err);
+      showToast('Verwijderen mislukt.', 'error');
+    }
   }
 
   async function handleFormSubmit(data) {
@@ -198,7 +211,7 @@ export default function Wishlist() {
         </div>
 
         {/* Add button (beheerder only) */}
-        {isBeheerder(role) && (
+        {canManage && (
           <button
             style={{ ...buttonStyle('primary'), minHeight: '44px', boxSizing: 'border-box', marginLeft: 'auto' }}
             onClick={openAdd}
@@ -215,7 +228,7 @@ export default function Wishlist() {
         <div style={emptyWrapStyle}>
           <Icon name="heart" size={32} />
           <p style={{ margin: 0 }}>Geen wishlist items gevonden.</p>
-          {isBeheerder(role) && (
+          {canManage && (
             <button
               style={{ ...buttonStyle('primary'), minHeight: '44px', boxSizing: 'border-box' }}
               onClick={openAdd}
@@ -232,6 +245,7 @@ export default function Wishlist() {
               item={item}
               onEdit={openEdit}
               onClick={setDetailItem}
+              onDelete={canManage ? handleDelete : undefined}
             />
           ))}
         </div>

@@ -34,8 +34,9 @@ const STATUS_LABELS = {
   gekocht: 'Gekocht',
 };
 
-export default function WishlistCard({ item, onEdit, onClick }) {
+export default function WishlistCard({ item, onEdit, onClick, onDelete }) {
   const [hovered, setHovered] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const {
     artist,
@@ -128,9 +129,32 @@ export default function WishlistCard({ item, onEdit, onClick }) {
     minHeight: '36px',
   };
 
+  const deleteBtnStyle = {
+    ...buttonStyle('danger'),
+    fontSize: '12px',
+    padding: '10px 12px',
+    minHeight: '36px',
+  };
+
   function handleEditClick(e) {
     e.stopPropagation();
     onEdit(item);
+  }
+
+  function handleDeleteClick(e) {
+    e.stopPropagation();
+    setConfirmingDelete(true);
+  }
+
+  function handleConfirmDelete(e) {
+    e.stopPropagation();
+    onDelete(item);
+    setConfirmingDelete(false);
+  }
+
+  function handleCancelDelete(e) {
+    e.stopPropagation();
+    setConfirmingDelete(false);
   }
 
   return (
@@ -183,16 +207,50 @@ export default function WishlistCard({ item, onEdit, onClick }) {
         <div style={notesStyle}>{notes}</div>
       )}
 
-      {/* Bottom: edit button */}
+      {/* Bottom: edit + delete */}
       <div style={bottomRowStyle}>
-        <button
-          type="button"
-          style={editBtnStyle}
-          onClick={handleEditClick}
-          aria-label="Bewerken"
-        >
-          <Icon name="edit" size={14} /> Bewerken
-        </button>
+        {confirmingDelete ? (
+          <>
+            <span style={{ fontSize: '12px', color: colors.accentRed, marginRight: '8px' }}>
+              Verwijderen?
+            </span>
+            <button
+              type="button"
+              style={{ ...deleteBtnStyle, marginRight: '8px' }}
+              onClick={handleConfirmDelete}
+            >
+              Ja
+            </button>
+            <button
+              type="button"
+              style={editBtnStyle}
+              onClick={handleCancelDelete}
+            >
+              Annuleer
+            </button>
+          </>
+        ) : (
+          <>
+            {onDelete && (
+              <button
+                type="button"
+                style={{ ...deleteBtnStyle, marginRight: '8px' }}
+                onClick={handleDeleteClick}
+                aria-label="Verwijderen"
+              >
+                <Icon name="trash" size={14} /> Verwijderen
+              </button>
+            )}
+            <button
+              type="button"
+              style={editBtnStyle}
+              onClick={handleEditClick}
+              aria-label="Bewerken"
+            >
+              <Icon name="edit" size={14} /> Bewerken
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

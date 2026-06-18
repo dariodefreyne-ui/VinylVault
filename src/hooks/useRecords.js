@@ -20,18 +20,6 @@ function generateSearchKeywords(artist, title) {
   return [...new Set(words)];
 }
 
-function computeKpis(records) {
-  let totalValue = 0;
-  for (const r of records) {
-    const qty = Number(r.quantity) || 1;
-    totalValue += (parseFloat(r.purchasePrice) || 0) * qty;
-  }
-  return {
-    totalRecords: records.length,
-    totalValue,
-  };
-}
-
 export function invalidateRecordsCache() {
   cachedRecords = null;
   cachedForUid = null;
@@ -126,14 +114,11 @@ export function useRecords() {
     setRecords(next);
   }
 
-  const kpis = computeKpis(records);
-
   return {
     records,
     loading,
     addRecord,
     updateRecord,
     deleteRecord,
-    kpis,
   };
 }
