@@ -59,7 +59,7 @@ const inputStyle = {
   borderRadius: radius.sm,
   padding: '8px 12px',
   color: colors.textPrimary,
-  fontSize: '14px',
+  fontSize: '16px',
   boxSizing: 'border-box',
   outline: 'none',
 };

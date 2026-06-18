@@ -82,7 +82,7 @@ export default function Register() {
     border: `1px solid ${colors.borderColor}`,
     backgroundColor: colors.bgPrimary,
     color: colors.textPrimary,
-    fontSize: '14px',
+    fontSize: '16px',
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',

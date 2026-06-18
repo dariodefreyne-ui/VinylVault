@@ -6,6 +6,7 @@ import WishlistCard from '../components/wishlist/WishlistCard.jsx';
 import WishlistForm from '../components/wishlist/WishlistForm.jsx';
 import DetailModal from '../components/ui/DetailModal.jsx';
 import Chip from '../components/ui/Chip.jsx';
+import Icon from '../components/ui/Icon.jsx';
 import { colors, buttonStyle } from '../styles/tokens.js';
 
 const STATUS_FILTERS = [
@@ -113,6 +114,14 @@ export default function Wishlist() {
     margin: '0 0 24px 0',
   };
 
+  const filterBarStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    alignItems: 'center',
+    marginBottom: '12px',
+  };
+
   const actionBarStyle = {
     display: 'flex',
     flexWrap: 'wrap',
@@ -128,11 +137,15 @@ export default function Wishlist() {
     alignItems: 'center',
   };
 
-  const dividerStyle = {
-    width: '1px',
-    height: '24px',
-    backgroundColor: colors.borderColor,
-    flexShrink: 0,
+  const emptyWrapStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    color: colors.textSecondary,
+    fontSize: '14px',
+    padding: '48px 0',
+    textAlign: 'center',
   };
 
   const gridStyle = {
@@ -157,9 +170,8 @@ export default function Wishlist() {
           : `${activeCount} actieve item${activeCount !== 1 ? 's' : ''}`}
       </p>
 
-      {/* Top action bar */}
-      <div style={actionBarStyle}>
-        {/* Status filter */}
+      {/* Status filter */}
+      <div style={filterBarStyle}>
         <div style={chipRowStyle}>
           {STATUS_FILTERS.map((f) => (
             <Chip
@@ -170,10 +182,10 @@ export default function Wishlist() {
             />
           ))}
         </div>
+      </div>
 
-        <div style={dividerStyle} />
-
-        {/* Owner filter */}
+      {/* Owner filter + add button */}
+      <div style={actionBarStyle}>
         <div style={chipRowStyle}>
           {ownerFilters.map((f) => (
             <Chip
@@ -188,7 +200,7 @@ export default function Wishlist() {
         {/* Add button (beheerder only) */}
         {isBeheerder(role) && (
           <button
-            style={buttonStyle('primary')}
+            style={{ ...buttonStyle('primary'), minHeight: '44px', boxSizing: 'border-box', marginLeft: 'auto' }}
             onClick={openAdd}
           >
             + Toevoegen
@@ -200,7 +212,18 @@ export default function Wishlist() {
       {loading ? (
         <p style={emptyStyle}>Laden...</p>
       ) : filtered.length === 0 ? (
-        <p style={emptyStyle}>Geen wishlist items gevonden.</p>
+        <div style={emptyWrapStyle}>
+          <Icon name="heart" size={32} />
+          <p style={{ margin: 0 }}>Geen wishlist items gevonden.</p>
+          {isBeheerder(role) && (
+            <button
+              style={{ ...buttonStyle('primary'), minHeight: '44px', boxSizing: 'border-box' }}
+              onClick={openAdd}
+            >
+              + Item toevoegen
+            </button>
+          )}
+        </div>
       ) : (
         <div style={gridStyle}>
           {filtered.map((item) => (

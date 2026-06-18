@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { colors, radius, buttonStyle } from '../../styles/tokens.js';
@@ -10,7 +10,7 @@ const inputStyle = {
   borderRadius: radius.sm,
   padding: '8px 12px',
   color: colors.textPrimary,
-  fontSize: '14px',
+  fontSize: '16px',
   boxSizing: 'border-box',
   outline: 'none',
 };
@@ -47,10 +47,10 @@ const fieldStyle = {
   flexDirection: 'column',
 };
 
-function Field({ label, children }) {
+function Field({ label, htmlFor, children }) {
   return (
     <div style={fieldStyle}>
-      <label style={labelStyle}>{label}</label>
+      <label style={labelStyle} htmlFor={htmlFor}>{label}</label>
       {children}
     </div>
   );
@@ -95,11 +95,25 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
   const [status, setStatus] = useState(initialData.status || 'actief');
   const [notes, setNotes] = useState(initialData.notes || '');
 
+  const submitInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (!loading) submitInFlightRef.current = false;
+  }, [loading]);
+
   function handleSubmit(e) {
     e.preventDefault();
+    if (submitInFlightRef.current) return;
+    if (!artist.trim()) {
+      return;
+    }
+    if (targetPrice !== '' && parseFloat(targetPrice) < 0) {
+      return;
+    }
     const matched = ownerOptions.find(
       (o) => o.label.toLowerCase() === owner.toLowerCase()
     );
+    submitInFlightRef.current = true;
     onSubmit({
       artist,
       title,
@@ -121,7 +135,7 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
     bottom: 0,
     backgroundColor: colors.bgCard,
     borderTop: `1px solid ${colors.borderColor}`,
-    padding: '16px 0 0',
+    padding: '16px 0 calc(0px + env(safe-area-inset-bottom))',
     display: 'flex',
     gap: '12px',
     justifyContent: 'flex-end',
@@ -133,23 +147,25 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
       <div style={sectionWrapStyle}>
         <h3 style={sectionHeaderStyle}>Wishlist item</h3>
         <div style={fieldGridStyle}>
-          <Field label="Artiest *">
+          <Field label="Artiest *" htmlFor="wf-artist">
             <Input
+              id="wf-artist"
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
               required
               placeholder="bijv. The Beatles"
             />
           </Field>
-          <Field label="Titel">
+          <Field label="Titel" htmlFor="wf-title">
             <Input
+              id="wf-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="bijv. Abbey Road"
             />
           </Field>
-          <Field label="Eigenaar *">
-            <Select value={owner} onChange={(e) => setOwner(e.target.value)} required>
+          <Field label="Eigenaar *" htmlFor="wf-owner">
+            <Select id="wf-owner" value={owner} onChange={(e) => setOwner(e.target.value)} required>
               {!ownerOptions.some((o) => o.label.toLowerCase() === owner.toLowerCase()) &&
                 owner && <option value={owner}>{owner}</option>}
               {ownerOptions.map((o) => (
@@ -157,15 +173,16 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
               ))}
             </Select>
           </Field>
-          <Field label="Prioriteit">
-            <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <Field label="Prioriteit" htmlFor="wf-priority">
+            <Select id="wf-priority" value={priority} onChange={(e) => setPriority(e.target.value)}>
               <option value="hoog">Hoog</option>
               <option value="normaal">Normaal</option>
               <option value="laag">Laag</option>
             </Select>
           </Field>
-          <Field label="Doelprijs EUR">
+          <Field label="Doelprijs (€)" htmlFor="wf-price">
             <Input
+              id="wf-price"
               type="number"
               value={targetPrice}
               onChange={(e) => setTargetPrice(e.target.value)}
@@ -174,16 +191,17 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
               placeholder="0.00"
             />
           </Field>
-          <Field label="Status">
-            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <Field label="Status" htmlFor="wf-status">
+            <Select id="wf-status" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="actief">Actief</option>
               <option value="gevonden">Gevonden</option>
               <option value="gekocht">Gekocht</option>
             </Select>
           </Field>
         </div>
-        <Field label="Notities">
+        <Field label="Notities" htmlFor="wf-notes">
           <textarea
+            id="wf-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
@@ -204,7 +222,7 @@ export default function WishlistForm({ initialData = {}, onSubmit, onCancel, loa
           onClick={onCancel}
           disabled={loading}
         >
-          Annuleer
+          Annuleren
         </button>
         <button
           type="submit"

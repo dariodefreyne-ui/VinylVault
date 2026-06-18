@@ -54,7 +54,9 @@ function NavItem({ to, icon, label, end }) {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        padding: '10px 16px',
+        padding: '13px 16px',
+        minHeight: '44px',
+        boxSizing: 'border-box',
         borderRadius: radius.md,
         fontSize: '14px',
         fontWeight: isActive ? 600 : 400,
@@ -179,7 +181,10 @@ function SidebarContent({ style, onClose }) {
           style={{
             ...buttonStyle('ghost'),
             fontSize: '13px',
-            padding: '6px 0',
+            padding: '12px 4px',
+            minHeight: '44px',
+            boxSizing: 'border-box',
+            width: '100%',
             justifyContent: 'flex-start',
             color: colors.textSecondary,
           }}
@@ -201,7 +206,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
   const desktopStyle = {
     width: `${SIDEBAR_WIDTH}px`,
     minWidth: `${SIDEBAR_WIDTH}px`,
-    height: '100vh',
+    height: '100dvh',
     backgroundColor: colors.bgCard,
     borderRight: `1px solid ${colors.borderColor}`,
     display: 'flex',

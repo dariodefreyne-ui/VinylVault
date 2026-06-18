@@ -67,8 +67,8 @@ export function ToastProvider({ children }) {
 
   const containerStyle = {
     position: 'fixed',
-    bottom: '24px',
-    right: '24px',
+    bottom: 'calc(24px + env(safe-area-inset-bottom))',
+    right: 'calc(24px + env(safe-area-inset-right))',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',

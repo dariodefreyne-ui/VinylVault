@@ -164,7 +164,7 @@ export default function Statistics() {
           </div>
 
           {/* Owner filter chips */}
-          <div style={{ ...sectionStyle, display: 'flex', gap: '8px' }}>
+          <div style={{ ...sectionStyle, display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {ownerFilters.map((f) => (
               <Chip
                 key={f.key}

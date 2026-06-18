@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { colors, radius } from '../../styles/tokens.js';
 
 export default function DetailModal({ open, onClose, title, children }) {
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const overlayStyle = {
@@ -52,7 +62,8 @@ export default function DetailModal({ open, onClose, title, children }) {
     color: colors.textSecondary,
     fontSize: '20px',
     lineHeight: 1,
-    padding: '4px',
+    width: '44px',
+    height: '44px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -72,7 +83,7 @@ export default function DetailModal({ open, onClose, title, children }) {
 
   return (
     <div style={overlayStyle} onClick={handleOverlayClick}>
-      <div style={sheetStyle}>
+      <div style={sheetStyle} role="dialog" aria-modal="true" aria-label={title}>
         <div style={headerStyle}>
           <h2 style={titleStyle}>{title}</h2>
           <button
