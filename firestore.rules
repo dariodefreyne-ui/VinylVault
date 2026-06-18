@@ -16,7 +16,7 @@ service cloud.firestore {
       // Geactiveerde gebruikers mogen elkaars profiel lezen (owner-selectie,
       // collectie-browsing). Eigen profiel + admin altijd.
       allow read: if isSignedIn() && (request.auth.uid == uid || isActivated());
-      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'pending';
       // Admin mag alles. Een gebruiker mag zijn eigen profiel bijwerken
       // (pincode, collectionLabel, collectionVisibility, displayName) maar
       // NOOIT zijn eigen rol wijzigen.
