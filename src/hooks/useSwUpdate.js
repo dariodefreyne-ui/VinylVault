@@ -54,6 +54,10 @@ export function useSwUpdate() {
 
   function applyUpdate() {
     if (!waitingWorker) return;
+    // Markeert dat DEZE tab de herlaad-actie heeft aangevraagd. sessionStorage is
+    // per-tab, dus andere open tabs zien deze vlag niet en herladen niet
+    // ongevraagd (zou anders onopgeslagen formulierdata kunnen verliezen).
+    sessionStorage.setItem('vv-sw-update-requested', '1');
     waitingWorker.postMessage({ type: 'SKIP_WAITING' });
   }
 

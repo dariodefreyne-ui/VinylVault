@@ -14,10 +14,17 @@ function injectSwVersion() {
     apply: 'build',
     closeBundle() {
       const swPath = path.resolve(__dirname, 'dist/sw.js');
+      let code;
       try {
-        const code = readFileSync(swPath, 'utf-8');
-        writeFileSync(swPath, code.replace('__VV_BUILD__', `vv-${Date.now()}`));
-      } catch { /* dist/sw.js bestaat niet → geen actie nodig */ }
+        code = readFileSync(swPath, 'utf-8');
+      } catch {
+        return; // dist/sw.js bestaat niet → geen actie nodig
+      }
+      if (!code.includes('__VV_BUILD__')) {
+        this.error('inject-sw-version: placeholder __VV_BUILD__ niet gevonden in dist/sw.js — build gestopt om te voorkomen dat gebruikers nooit een update-melding krijgen.');
+        return;
+      }
+      writeFileSync(swPath, code.replace('__VV_BUILD__', `vv-${Date.now()}`));
     },
   };
 }

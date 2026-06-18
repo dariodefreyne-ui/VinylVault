@@ -26,7 +26,7 @@ self.addEventListener('install', (event) => {
   // gestuurd en de nieuwe SW pas dan overschakelt.
   event.waitUntil(
     caches.open(SHELL_CACHE).then((cache) => cache.addAll(['/', '/index.html']))
-      .catch(() => {})
+      .catch((err) => console.error('SW install: shell cache failed', err))
   );
 });
 
@@ -66,15 +66,19 @@ async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const response = await fetch(request);
-  if (response && response.ok) cache.put(request, response.clone());
-  return response;
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (err) {
+    return Response.error();
+  }
 }
 
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const network = fetch(request)
+  const networkPromise = fetch(request)
     .then((response) => {
       if (response && (response.ok || response.type === 'opaque')) {
         cache.put(request, response.clone());
@@ -82,7 +86,9 @@ async function staleWhileRevalidate(request, cacheName) {
       return response;
     })
     .catch(() => null);
-  return cached || network || fetch(request);
+  if (cached) return cached;
+  const network = await networkPromise;
+  return network || Response.error();
 }
 
 self.addEventListener('fetch', (event) => {

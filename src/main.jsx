@@ -16,10 +16,15 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       .register('/sw.js')
       .catch((err) => console.error('Service worker registratie mislukt:', err));
 
-    // Herlaad zodra de nieuwe SW de controle overneemt (na klik op "Bijwerken").
+    // Herlaad zodra de nieuwe SW de controle overneemt, maar enkel in de tab
+    // waarin de gebruiker zelf op "Bijwerken" klikte (zie useSwUpdate.js).
+    // Andere open tabs herladen NIET automatisch — dat zou onopgeslagen
+    // formulierdata in die tabs kunnen wissen.
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
+      if (sessionStorage.getItem('vv-sw-update-requested') !== '1') return;
+      sessionStorage.removeItem('vv-sw-update-requested');
       refreshing = true;
       window.location.reload();
     });
