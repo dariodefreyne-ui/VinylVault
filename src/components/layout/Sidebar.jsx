@@ -201,7 +201,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
   const desktopStyle = {
     width: `${SIDEBAR_WIDTH}px`,
     minWidth: `${SIDEBAR_WIDTH}px`,
-    height: '100vh',
+    height: '100dvh',
     backgroundColor: colors.bgCard,
     borderRight: `1px solid ${colors.borderColor}`,
     display: 'flex',

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useOwnerOptions } from '../../hooks/useOwnerOptions.js';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { useToast } from '../ui/Toast.jsx';
@@ -17,7 +17,7 @@ const inputStyle = {
   borderRadius: radius.sm,
   padding: '8px 12px',
   color: colors.textPrimary,
-  fontSize: '14px',
+  fontSize: '16px',
   boxSizing: 'border-box',
   outline: 'none',
 };
@@ -169,7 +169,19 @@ function GenreTagInput({ genres, onChange }) {
 }
 
 function ImagePreview({ file, url }) {
-  const src = file ? URL.createObjectURL(file) : url;
+  const [blobUrl, setBlobUrl] = useState(null);
+
+  useEffect(() => {
+    if (!file) {
+      setBlobUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setBlobUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  const src = file ? blobUrl : url;
   if (!src) return null;
   return (
     <img
@@ -232,6 +244,11 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   const showToast = useToast();
   const coverInputRef = useRef(null);
   const extraInputRef = useRef(null);
+  const submitInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (!loading) submitInFlightRef.current = false;
+  }, [loading]);
 
   function applyResult(r) {
     if (!artist && r.artist) setArtist(r.artist);
@@ -261,9 +278,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       }
     } catch (err) {
       console.error('RecordForm: lookup failed', err);
-      const msg = err?.code === 'functions/internal' || err?.message === 'internal'
-        ? 'Kon de metadata-service niet bereiken. Is de Cloud Function gedeployed? Probeer later opnieuw.'
-        : 'Metadata-lookup mislukt. Probeer later opnieuw.';
+      const msg = 'Metadata-lookup mislukt. Probeer later opnieuw.';
       showToast(msg, 'error');
     } finally {
       setLooking(false);
@@ -341,18 +356,42 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (submitInFlightRef.current) return;
+    if (!artist.trim() || !title.trim()) {
+      showToast('Artiest en albumtitel zijn verplicht.', 'error');
+      return;
+    }
+    if (price !== '' && parseFloat(price) < 0) {
+      showToast('Aankoopprijs kan niet negatief zijn.', 'error');
+      return;
+    }
+    if (quantity !== '' && parseInt(quantity, 10) < 1) {
+      showToast('Aantal moet minstens 1 zijn.', 'error');
+      return;
+    }
+    const currentYear = new Date().getFullYear();
+    if (year !== '' && (parseInt(year, 10) < 1900 || parseInt(year, 10) > currentYear + 1)) {
+      showToast('Jaar (origineel) ligt buiten het geldige bereik.', 'error');
+      return;
+    }
+    if (releaseYear !== '' && (parseInt(releaseYear, 10) < 1900 || parseInt(releaseYear, 10) > currentYear + 1)) {
+      showToast('Uitgavejaar ligt buiten het geldige bereik.', 'error');
+      return;
+    }
     const data = buildData();
     if (price === '') {
       setPendingData(data);
       setShowPriceWarning(true);
       return;
     }
+    submitInFlightRef.current = true;
     onSubmit(data);
   }
 
   function confirmSubmit() {
     setShowPriceWarning(false);
     if (pendingData) {
+      submitInFlightRef.current = true;
       onSubmit(pendingData);
       setPendingData(null);
     }
@@ -367,7 +406,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
     bottom: 0,
     backgroundColor: colors.bgCard,
     borderTop: `1px solid ${colors.borderColor}`,
-    padding: '16px 0 12px',
+    padding: '16px 0 calc(12px + env(safe-area-inset-bottom))',
     display: 'flex',
     gap: '12px',
     justifyContent: 'flex-end',
@@ -452,7 +491,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               ))}
             </Select>
           </Field>
-          <Field label="Aankoopprijs EUR">
+          <Field label="Aankoopprijs (€)">
             <Input
               type="number"
               value={price}
@@ -524,7 +563,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               placeholder="bijv. UK"
             />
           </Field>
-          <Field label="Format">
+          <Field label="Formaat">
             <Select value={format} onChange={(e) => setFormat(e.target.value)}>
               <option value="LP">LP</option>
               <option value='7"'>7"</option>
@@ -661,7 +700,7 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
           onClick={onCancel}
           disabled={loading}
         >
-          Annuleer
+          Annuleren
         </button>
         <button
           type="submit"
