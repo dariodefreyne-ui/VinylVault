@@ -327,7 +327,7 @@ export default function AllRecords() {
       {/* Rij 1b: Actieknoppen */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
         <button
-          style={buttonStyle('secondary')}
+          style={{ ...buttonStyle('secondary'), minHeight: '44px', boxSizing: 'border-box' }}
           onClick={() => exportToExcel(filtered, 'vinylvault-export.xlsx')}
           disabled={loading || filtered.length === 0}
         >
@@ -337,19 +337,19 @@ export default function AllRecords() {
         {isBeheerder(role) && (
           <>
             <button
-              style={buttonStyle('primary')}
+              style={{ ...buttonStyle('primary'), minHeight: '44px', boxSizing: 'border-box' }}
               onClick={() => navigate('/platen/nieuw')}
             >
               <Icon name="plus" size={15} /> Lp toevoegen
             </button>
             <button
-              style={buttonStyle('secondary')}
+              style={{ ...buttonStyle('secondary'), minHeight: '44px', boxSizing: 'border-box' }}
               onClick={() => setImportOpen(true)}
             >
               <Icon name="download" size={15} /> Importeer
             </button>
             <button
-              style={buttonStyle('secondary')}
+              style={{ ...buttonStyle('secondary'), minHeight: '44px', boxSizing: 'border-box' }}
               onClick={() => setEnrichOpen(true)}
             >
               <Icon name="search" size={15} /> Metadata aanvullen

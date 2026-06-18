@@ -124,7 +124,8 @@ export default function WishlistCard({ item, onEdit, onClick }) {
   const editBtnStyle = {
     ...buttonStyle('ghost'),
     fontSize: '12px',
-    padding: '4px 8px',
+    padding: '10px 12px',
+    minHeight: '36px',
   };
 
   function handleEditClick(e) {

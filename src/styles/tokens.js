@@ -97,6 +97,8 @@ export function chipStyle(active) {
   return {
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '36px',
     padding: '5px 13px',
     borderRadius: '999px',
     fontSize: '13px',
@@ -106,6 +108,7 @@ export function chipStyle(active) {
     border: `1px solid ${active ? colors.brand : colors.borderColor}`,
     cursor: 'pointer',
     transition: 'all 0.18s ease',
+    boxSizing: 'border-box',
   };
 }
 
@@ -120,6 +123,7 @@ export function buttonStyle(variant = 'primary') {
     fontWeight: 600,
     border: '1px solid transparent',
     cursor: 'pointer',
+    boxSizing: 'border-box',
     transition: 'transform 0.12s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
   };
   const variants = {

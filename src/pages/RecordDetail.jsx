@@ -367,9 +367,17 @@ export default function RecordDetail() {
       </div>
 
       {/* Tabs: Info / Tracklist / Foto's / Notities */}
-      <div style={tabBarStyle}>
+      <div style={tabBarStyle} role="tablist" aria-label="Lp-details">
         {TABS.map((t) => (
-          <button key={t.key} style={chipStyle(activeTab === t.key)} onClick={() => setActiveTab(t.key)}>
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={activeTab === t.key}
+            id={`tab-${t.key}`}
+            aria-controls={`tabpanel-${t.key}`}
+            style={chipStyle(activeTab === t.key)}
+            onClick={() => setActiveTab(t.key)}
+          >
             {t.label}
           </button>
         ))}
@@ -377,7 +385,7 @@ export default function RecordDetail() {
 
       {/* Info — alle opgeslagen velden in inklapbare secties (standaard ingeklapt) */}
       {activeTab === 'info' && (
-        <div>
+        <div role="tabpanel" id="tabpanel-info" aria-labelledby="tab-info">
           <Section title="Algemeen">
             <div style={infoGridStyle}>
               <InfoRow label="Artiest" value={record.artist} />
@@ -436,47 +444,53 @@ export default function RecordDetail() {
 
       {/* Tracklist */}
       {activeTab === 'tracklist' && (
-        record.tracklist && record.tracklist.length > 0 ? (
-          <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {record.tracklist.map((track, i) => (
-              <li key={i} style={{ fontSize: '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
-                {track}
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen tracklist beschikbaar.</p>
-        )
+        <div role="tabpanel" id="tabpanel-tracklist" aria-labelledby="tab-tracklist">
+          {record.tracklist && record.tracklist.length > 0 ? (
+            <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {record.tracklist.map((track, i) => (
+                <li key={i} style={{ fontSize: '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
+                  {track}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen tracklist beschikbaar.</p>
+          )}
+        </div>
       )}
 
       {/* Foto's */}
       {activeTab === 'fotos' && (
-        record.userPhotos && record.userPhotos.length > 0 ? (
-          <div style={photoGridStyle}>
-            {record.userPhotos.map((url, i) => (
-              <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                <img
-                  src={url}
-                  alt={`Foto ${i + 1}`}
-                  style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: radius.sm, border: `1px solid ${colors.borderColor}`, display: 'block' }}
-                />
-              </a>
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen foto's beschikbaar.</p>
-        )
+        <div role="tabpanel" id="tabpanel-fotos" aria-labelledby="tab-fotos">
+          {record.userPhotos && record.userPhotos.length > 0 ? (
+            <div style={photoGridStyle}>
+              {record.userPhotos.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={url}
+                    alt={`Foto ${i + 1}`}
+                    style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: radius.sm, border: `1px solid ${colors.borderColor}`, display: 'block' }}
+                  />
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen foto's beschikbaar.</p>
+          )}
+        </div>
       )}
 
       {/* Notities */}
       {activeTab === 'notities' && (
-        record.notes && record.notes.trim() ? (
-          <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-            {record.notes}
-          </p>
-        ) : (
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen notities.</p>
-        )
+        <div role="tabpanel" id="tabpanel-notities" aria-labelledby="tab-notities">
+          {record.notes && record.notes.trim() ? (
+            <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+              {record.notes}
+            </p>
+          ) : (
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Geen notities.</p>
+          )}
+        </div>
       )}
 
       {/* Bevestiging bij verwijderen */}
