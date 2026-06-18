@@ -66,6 +66,7 @@ const selectStyle = {
 
 export default function UserTable({ users, onRoleChange, onDelete }) {
   const [hovered, setHovered] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const sorted = sortUsers(users);
 
   return (
@@ -111,19 +112,44 @@ export default function UserTable({ users, onRoleChange, onDelete }) {
                     </option>
                   ))}
                 </select>
-                <button
-                  style={{
-                    ...buttonStyle('danger'),
-                    padding: '4px 10px',
-                    fontSize: '12px',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(user.id);
-                  }}
-                >
-                  Verwijder
-                </button>
+                {confirmDelete === user.id ? (
+                  <>
+                    <span style={{ fontSize: '12px', color: colors.accentRed, marginRight: '6px' }}>Zeker?</span>
+                    <button
+                      style={{ ...buttonStyle('danger'), padding: '4px 10px', fontSize: '12px', marginRight: '6px' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDelete(null);
+                        onDelete(user.id);
+                      }}
+                    >
+                      Ja, verwijder
+                    </button>
+                    <button
+                      style={{ ...buttonStyle('ghost'), padding: '4px 10px', fontSize: '12px' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDelete(null);
+                      }}
+                    >
+                      Annuleren
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    style={{
+                      ...buttonStyle('danger'),
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDelete(user.id);
+                    }}
+                  >
+                    Verwijder
+                  </button>
+                )}
               </td>
             </tr>
           ))}

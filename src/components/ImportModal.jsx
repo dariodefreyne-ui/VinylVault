@@ -165,7 +165,8 @@ function StepFileSelect({ onParsed }) {
       setFileName(file.name);
       setParsedRows(rows);
     } catch (err) {
-      setError(err.message);
+      console.error('ImportModal: failed to parse file', err);
+      setError('Kon het bestand niet inlezen. Controleer of het een geldig Excel-bestand (.xlsx) is.');
       setParsedRows(null);
     } finally {
       setParsing(false);
@@ -740,7 +741,8 @@ export default function ImportModal({ open, onClose }) {
   }
 
   function handleImportError(err) {
-    showToast(err.message || 'Import mislukt.', 'error');
+    console.error('ImportModal: import failed', err);
+    showToast('Import mislukt. Probeer het opnieuw.', 'error');
     setStep(3);
   }
 
