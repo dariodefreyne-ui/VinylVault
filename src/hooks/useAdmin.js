@@ -75,6 +75,9 @@ export function useAdmin() {
       await deleteAuthUserFn({ uid });
     } catch (err) {
       console.error('useAdmin: failed to delete Firebase Auth account', err);
+      // Firestore-profiel is wel verwijderd, maar het Auth-account (met
+      // inlog-gegevens) bestaat nog — de caller moet dit als deelresultaat tonen.
+      throw new Error('partial-delete');
     }
   }
 

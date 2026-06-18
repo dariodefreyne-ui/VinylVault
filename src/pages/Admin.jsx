@@ -116,8 +116,12 @@ export default function Admin() {
     try {
       await deleteUser(deleteConfirm);
       showToast('Gebruiker verwijderd.', 'success');
-    } catch {
-      showToast('Fout bij verwijderen van gebruiker.', 'error');
+    } catch (err) {
+      if (err?.message === 'partial-delete') {
+        showToast('Profiel verwijderd, maar het inlogaccount kon niet verwijderd worden. Neem contact op met een ontwikkelaar.', 'error');
+      } else {
+        showToast('Fout bij verwijderen van gebruiker.', 'error');
+      }
     } finally {
       setDeleteConfirm(null);
     }
