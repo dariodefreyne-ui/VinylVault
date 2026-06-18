@@ -63,6 +63,7 @@ function Section({ title, defaultOpen = false, children }) {
     <div style={{ border: `1px solid ${colors.borderColor}`, borderRadius: radius.md, marginBottom: '12px', overflow: 'hidden' }}>
       <button
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: '10px', padding: '14px 16px', backgroundColor: colors.bgCard, border: 'none',
@@ -309,7 +310,7 @@ export default function RecordDetail() {
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     borderBottom: `1px solid ${colors.borderColor}`,
-    padding: '12px 0',
+    padding: 'calc(12px + env(safe-area-inset-top)) 0 12px',
     marginBottom: '20px',
   };
 
@@ -417,7 +418,7 @@ export default function RecordDetail() {
                 }
               />
               <InfoRow label="Origineel" value={originalLabel(record)} />
-              <InfoRow label="Format" value={record.format} />
+              <InfoRow label="Formaat" value={record.format} />
               <InfoRow label="Conditie" value={record.condition} />
               <InfoRow label="Locatie / kast" value={record.location} />
             </div>
@@ -496,7 +497,7 @@ export default function RecordDetail() {
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button style={buttonStyle('secondary')} onClick={() => setConfirmDelete(false)} disabled={deleteLoading}>
-                Annuleer
+                Annuleren
               </button>
               <button
                 style={{ ...buttonStyle('danger'), opacity: deleteLoading ? 0.6 : 1, cursor: deleteLoading ? 'not-allowed' : 'pointer' }}

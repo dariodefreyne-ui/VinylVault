@@ -16,7 +16,7 @@ async function uploadFile(file, path) {
 
 export default function RecordAdd() {
   const navigate = useNavigate();
-  const { addRecord, updateRecord } = useRecords();
+  const { addRecord, updateRecord, deleteRecord } = useRecords();
   const showToast = useToast();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -38,8 +38,9 @@ export default function RecordAdd() {
     }
 
     setLoading(true);
+    let newId = null;
     try {
-      const newId = await addRecord({
+      newId = await addRecord({
         ...rest,
         artist: artist.trim(),
         title: title.trim(),
@@ -56,13 +57,15 @@ export default function RecordAdd() {
         updates.coverImageUrl = await uploadFile(coverFile, `records/${newId}/cover_${Date.now()}.jpg`);
       }
 
-      const userPhotos = [];
       if (extraFiles && extraFiles.length > 0) {
-        for (let i = 0; i < extraFiles.length; i++) {
-          const url = await uploadFile(extraFiles[i], `records/${newId}/photo_${Date.now()}_${i}.jpg`);
-          userPhotos.push(url);
+        const results = await Promise.allSettled(
+          extraFiles.map((file, i) => uploadFile(file, `records/${newId}/photo_${Date.now()}_${i}.jpg`))
+        );
+        const userPhotos = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+        if (userPhotos.length > 0) updates.userPhotos = userPhotos;
+        if (userPhotos.length < extraFiles.length) {
+          showToast('Niet alle extra foto\'s konden geüpload worden.', 'error');
         }
-        updates.userPhotos = userPhotos;
       }
 
       if (Object.keys(updates).length > 0) {
@@ -73,6 +76,13 @@ export default function RecordAdd() {
       navigate(`/platen/${newId}`);
     } catch (err) {
       console.error('RecordAdd: failed to add record', err);
+      if (newId) {
+        try {
+          await deleteRecord(newId);
+        } catch (cleanupErr) {
+          console.error('RecordAdd: failed to roll back partially created record', cleanupErr);
+        }
+      }
       showToast('Er is iets misgegaan bij het toevoegen.', 'error');
     } finally {
       setLoading(false);
