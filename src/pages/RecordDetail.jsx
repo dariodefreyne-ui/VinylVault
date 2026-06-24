@@ -122,6 +122,15 @@ export default function RecordDetail() {
     loadRecord();
   }, [loadRecord]);
 
+  useEffect(() => {
+    if (!confirmDelete) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && !deleteLoading) setConfirmDelete(false);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmDelete, deleteLoading]);
+
   async function handleSave(formData) {
     const { coverFile, extraFiles, ...rest } = formData;
     setSaveLoading(true);

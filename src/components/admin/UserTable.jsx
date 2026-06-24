@@ -67,6 +67,7 @@ const selectStyle = {
 export default function UserTable({ users, onRoleChange, onDelete }) {
   const [hovered, setHovered] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [pendingRole, setPendingRole] = useState(null);
   const sorted = sortUsers(users);
 
   return (
@@ -103,8 +104,15 @@ export default function UserTable({ users, onRoleChange, onDelete }) {
               <td style={tdStyle}>
                 <select
                   style={selectStyle}
-                  value={user.role || 'pending'}
-                  onChange={(e) => onRoleChange(user.id, e.target.value)}
+                  value={pendingRole?.userId === user.id ? pendingRole.newRole : (user.role || 'pending')}
+                  onChange={(e) => {
+                    const newRole = e.target.value;
+                    if (newRole === (user.role || 'pending')) {
+                      setPendingRole(null);
+                      return;
+                    }
+                    setPendingRole({ userId: user.id, newRole });
+                  }}
                 >
                   {ROLES.map((r) => (
                     <option key={r} value={r}>
@@ -112,6 +120,32 @@ export default function UserTable({ users, onRoleChange, onDelete }) {
                     </option>
                   ))}
                 </select>
+                {pendingRole?.userId === user.id && (
+                  <>
+                    <span style={{ fontSize: '12px', color: colors.accentRed, marginRight: '6px' }}>
+                      Rol wijzigen naar {pendingRole.newRole}?
+                    </span>
+                    <button
+                      style={{ ...buttonStyle('danger'), padding: '4px 10px', fontSize: '12px', marginRight: '6px' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRoleChange(user.id, pendingRole.newRole);
+                        setPendingRole(null);
+                      }}
+                    >
+                      Ja, wijzig rol
+                    </button>
+                    <button
+                      style={{ ...buttonStyle('ghost'), padding: '4px 10px', fontSize: '12px' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPendingRole(null);
+                      }}
+                    >
+                      Annuleren
+                    </button>
+                  </>
+                )}
                 {confirmDelete === user.id ? (
                   <>
                     <span style={{ fontSize: '12px', color: colors.accentRed, marginRight: '6px' }}>Zeker?</span>
