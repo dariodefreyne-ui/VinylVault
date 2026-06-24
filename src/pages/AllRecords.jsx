@@ -295,6 +295,7 @@ export default function AllRecords() {
             style={searchInputStyle}
             type="text"
             placeholder="Zoek op artiest of titel..."
+            aria-label="Zoek op artiest of titel"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
