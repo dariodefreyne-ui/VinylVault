@@ -229,11 +229,13 @@ export default function Statistics() {
                         >
                           <div
                             style={{
-                              width: `${pct}%`,
+                              width: '100%',
                               height: '100%',
                               backgroundColor: colors.accentRed,
                               borderRadius: radius.sm,
-                              transition: 'width 0.3s ease',
+                              transform: `scaleX(${pct / 100})`,
+                              transformOrigin: 'left',
+                              transition: 'transform 0.3s ease',
                             }}
                           />
                         </div>

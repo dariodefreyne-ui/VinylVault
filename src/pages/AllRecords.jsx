@@ -9,7 +9,7 @@ import Chip from '../components/ui/Chip.jsx';
 import ImportModal from '../components/ImportModal.jsx';
 import EnrichModal from '../components/EnrichModal.jsx';
 import { exportToExcel } from '../utils/importExcel.js';
-import { colors, radius, buttonStyle } from '../styles/tokens.js';
+import { colors, radius, buttonStyle, fonts } from '../styles/tokens.js';
 
 const SORT_OPTIONS = [
   { value: 'artist_asc', label: 'Artiest A-Z, dan jaar' },
@@ -206,8 +206,10 @@ export default function AllRecords() {
   };
 
   const headingStyle = {
+    fontFamily: fonts.display,
     fontSize: '28px',
-    fontWeight: 700,
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
     color: colors.textPrimary,
     margin: '0 0 4px 0',
   };

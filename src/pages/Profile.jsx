@@ -7,7 +7,7 @@ import { useUsers, invalidateUsersCache } from '../hooks/useUsers.js';
 import { useGrants, canViewCollection } from '../hooks/useGrants.js';
 import { useToast } from '../components/ui/Toast.jsx';
 import { ownerLabelOf } from '../utils/owners.js';
-import { colors, radius, buttonStyle, badgeStyle } from '../styles/tokens.js';
+import { colors, radius, buttonStyle, badgeStyle, fonts } from '../styles/tokens.js';
 
 const pageStyle = {
   maxWidth: '900px',
@@ -15,8 +15,10 @@ const pageStyle = {
 };
 
 const headingStyle = {
+  fontFamily: fonts.display,
   fontSize: '26px',
-  fontWeight: 700,
+  fontWeight: 600,
+  letterSpacing: '-0.01em',
   color: colors.textPrimary,
   marginBottom: '24px',
 };

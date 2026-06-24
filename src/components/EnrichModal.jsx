@@ -124,10 +124,12 @@ export default function EnrichModal({ open, onClose }) {
   };
   const barFill = {
     height: '100%',
-    width: pct + '%',
+    width: '100%',
     backgroundColor: colors.brand,
     borderRadius: radius.sm,
-    transition: 'width 0.3s ease',
+    transform: `scaleX(${pct / 100})`,
+    transformOrigin: 'left',
+    transition: 'transform 0.3s ease',
   };
 
   return (

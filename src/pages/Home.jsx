@@ -7,7 +7,7 @@ import { isOwnRecord } from '../utils/owners.js';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import RecordCard from '../components/records/RecordCard.jsx';
 import Icon from '../components/ui/Icon.jsx';
-import { colors, radius, buttonStyle } from '../styles/tokens.js';
+import { colors, radius, buttonStyle, fonts } from '../styles/tokens.js';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -117,8 +117,10 @@ export default function Home() {
   };
 
   const headingStyle = {
+    fontFamily: fonts.display,
     fontSize: '28px',
-    fontWeight: 700,
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
     color: colors.textPrimary,
     margin: '0 0 4px 0',
   };
