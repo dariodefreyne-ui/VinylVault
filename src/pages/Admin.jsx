@@ -217,7 +217,7 @@ export default function Admin() {
             border: `1px solid ${colors.accentRed}`,
             borderRadius: radius.md,
             padding: '20px',
-            backgroundColor: 'rgba(207,106,76,0.06)',
+            backgroundColor: colors.accentRed + '0f',
           }}
         >
           <div style={{ fontSize: '15px', fontWeight: 700, color: colors.accentRed, marginBottom: '6px' }}>

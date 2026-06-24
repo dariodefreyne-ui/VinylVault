@@ -116,13 +116,13 @@ function StepIndicator({ currentStep, totalSteps }) {
           backgroundColor: isActive
             ? colors.accentRed
             : isDone
-            ? 'rgba(229,57,53,0.25)'
+            ? colors.redDim
             : colors.bgHover,
           color: isActive ? '#fff' : isDone ? colors.accentRed : colors.textSecondary,
           border: isActive
             ? '2px solid ' + colors.accentRed
             : isDone
-            ? '2px solid rgba(229,57,53,0.4)'
+            ? '2px solid ' + colors.accentRed + '66'
             : '2px solid ' + colors.borderColor,
           flexShrink: 0,
           transition: 'all 0.2s ease',
@@ -131,7 +131,7 @@ function StepIndicator({ currentStep, totalSteps }) {
         const lineStyle = {
           width: '32px',
           height: '2px',
-          backgroundColor: isDone ? 'rgba(229,57,53,0.4)' : colors.borderColor,
+          backgroundColor: isDone ? colors.accentRed + '66' : colors.borderColor,
           margin: '0 4px',
         };
 
@@ -199,7 +199,7 @@ function StepFileSelect({ onParsed }) {
     borderRadius: radius.md,
     padding: '32px',
     textAlign: 'center',
-    backgroundColor: dragging ? 'rgba(229,57,53,0.06)' : colors.bgHover,
+    backgroundColor: dragging ? colors.redDim : colors.bgHover,
     transition: 'border-color 0.15s ease, background-color 0.15s ease',
     marginBottom: '16px',
   };
@@ -453,7 +453,7 @@ function StepPreview({ rows, mapping, existingByKey, onNext, onBack }) {
       padding: '6px 8px',
       color: colors.textPrimary,
       borderBottom: '1px solid ' + colors.borderColor,
-      backgroundColor: hasError ? 'rgba(229,57,53,0.12)' : 'transparent',
+      backgroundColor: hasError ? colors.redDim : 'transparent',
       whiteSpace: 'nowrap',
       maxWidth: '140px',
       overflow: 'hidden',
