@@ -1,9 +1,9 @@
 import { createRoot } from 'react-dom/client';
-import { setupTokens } from './styles/tokens.js';
+import { applyTheme, getStoredTheme } from './styles/tokens.js';
 import './index.css';
 import App from './App.jsx';
 
-setupTokens();
+applyTheme(getStoredTheme());
 
 createRoot(document.getElementById('root')).render(<App />);
 

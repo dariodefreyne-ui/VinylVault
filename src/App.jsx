@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useState } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
+import { ThemeProvider, useTheme } from './hooks/useTheme.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
 import { isActivated, isAdmin, isBeheerder } from './utils/roles.js';
 import Layout from './components/layout/Layout.jsx';
@@ -246,10 +247,11 @@ const router = createBrowserRouter([
 function AppShell() {
   const { hasUpdate, applyUpdate } = useSwUpdate();
   const [dismissed, setDismissed] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <>
-      <RouterProvider router={router} />
+      <RouterProvider key={theme} router={router} />
       {hasUpdate && !dismissed && (
         <UpdateBanner
           onUpdate={applyUpdate}
@@ -263,11 +265,13 @@ function AppShell() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <ToastProvider>
-          <AppShell />
-        </ToastProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <AppShell />
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

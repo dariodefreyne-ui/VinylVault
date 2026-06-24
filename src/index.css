@@ -24,8 +24,8 @@ body {
   overscroll-behavior-y: contain;
   /* Warme gloed + diepte i.p.v. een platte kleur — subtiel, niet schreeuwerig */
   background-image:
-    radial-gradient(1100px 620px at 82% -12%, rgba(217, 160, 91, 0.10), transparent 60%),
-    radial-gradient(820px 520px at -12% 112%, rgba(207, 106, 76, 0.08), transparent 60%);
+    radial-gradient(1100px 620px at 82% -12%, var(--glow-top, rgba(217, 160, 91, 0.10)), transparent 60%),
+    radial-gradient(820px 520px at -12% 112%, var(--glow-bottom, rgba(207, 106, 76, 0.08)), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -36,7 +36,7 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.04;
+  opacity: var(--grain-opacity, 0.04);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -71,23 +71,23 @@ input, select, textarea {
 }
 
 ::selection {
-  background: rgba(217, 160, 91, 0.30);
+  background: var(--selection-color, rgba(217, 160, 91, 0.30));
   color: #fff;
 }
 
-/* Warme, smalle scrollbar */
+/* Smalle scrollbar, kleur volgt het actieve thema */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3a3128 transparent;
+  scrollbar-color: var(--scrollbar-thumb, #3a3128) transparent;
 }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-thumb {
-  background: #3a3128;
+  background: var(--scrollbar-thumb, #3a3128);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-*::-webkit-scrollbar-thumb:hover { background: #4a4032; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover, #4a4032); background-clip: padding-box; }
 
 /* ── Motion: zachte entrance + gestapelde reveal ───────────────────────── */
 @keyframes vv-fade-up {
