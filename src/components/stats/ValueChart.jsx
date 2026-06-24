@@ -105,18 +105,18 @@ function computeMonthlyLine(records) {
 
 const tickStyle = { fill: colors.textSecondary, fontSize: 11 };
 
+const PIE_COLORS = [
+  colors.brand,
+  colors.accentBlue,
+  colors.accentGreen,
+  colors.accentRed,
+  colors.accentOrange,
+];
+
 export default function ValueChart({ records, ownerFilter }) {
   const top10 = computeTop10(records, ownerFilter);
   const ownerSplit = computeOwnerSplit(records);
   const monthly = computeMonthlyLine(records);
-
-  const PIE_COLORS = [
-    colors.brand,
-    colors.accentBlue,
-    colors.accentGreen,
-    colors.accentRed,
-    colors.accentOrange,
-  ];
 
   const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.04) return null;

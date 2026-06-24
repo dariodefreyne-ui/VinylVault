@@ -12,6 +12,10 @@ export default function KpiTegel({ label, value, onClick, color }) {
   const [hovered, setHovered] = useState(false);
 
   const cardStyle = {
+    display: 'block',
+    width: '100%',
+    textAlign: 'left',
+    fontFamily: 'inherit',
     backgroundColor: hovered && onClick ? colors.bgHover : colors.bgCard,
     border: `1px solid ${hovered && onClick ? colors.brand : colors.borderColor}`,
     borderRadius: radius.md,
@@ -23,6 +27,8 @@ export default function KpiTegel({ label, value, onClick, color }) {
     minWidth: '80px',
     flex: '1 1 0',
   };
+
+  const Tag = onClick ? 'button' : 'div';
 
   const labelStyle = {
     fontSize: '11px',
@@ -41,7 +47,8 @@ export default function KpiTegel({ label, value, onClick, color }) {
   };
 
   return (
-    <div
+    <Tag
+      type={onClick ? 'button' : undefined}
       style={cardStyle}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
@@ -49,6 +56,6 @@ export default function KpiTegel({ label, value, onClick, color }) {
     >
       <div style={labelStyle}>{label}</div>
       <div style={valueStyle}>{value}</div>
-    </div>
+    </Tag>
   );
 }
