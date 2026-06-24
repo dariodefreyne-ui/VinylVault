@@ -54,22 +54,34 @@ const fieldStyle = {
   flexDirection: 'column',
 };
 
-function Field({ label, children }) {
+const errorTextStyle = {
+  fontSize: '12px',
+  color: colors.accentRed,
+  marginTop: '4px',
+};
+
+function Field({ label, error, children }) {
   return (
     <div style={fieldStyle}>
       <label style={labelStyle}>{label}</label>
       {children}
+      {error && <span style={errorTextStyle}>{error}</span>}
     </div>
   );
 }
 
-function Input({ value, onChange, type = 'text', ...rest }) {
+function Input({ value, onChange, type = 'text', error, style, ...rest }) {
   return (
     <input
       type={type}
       value={value}
       onChange={onChange}
-      style={inputStyle}
+      style={{
+        ...inputStyle,
+        ...(error ? { borderColor: colors.accentRed } : null),
+        ...style,
+      }}
+      aria-invalid={error ? 'true' : undefined}
       {...rest}
     />
   );
@@ -228,6 +240,24 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   const [tracklist, setTracklist] = useState(
     Array.isArray(initialData.tracklist) ? initialData.tracklist : []
   );
+  const [errors, setErrors] = useState({});
+
+  function validateField(field, value) {
+    const currentYear = new Date().getFullYear();
+    let message = '';
+    if (field === 'artist' && !value.trim()) message = 'Artiest is verplicht.';
+    if (field === 'title' && !value.trim()) message = 'Albumtitel is verplicht.';
+    if (field === 'price' && value !== '' && parseFloat(value) < 0) message = 'Aankoopprijs kan niet negatief zijn.';
+    if (field === 'quantity' && value !== '' && parseInt(value, 10) < 1) message = 'Aantal moet minstens 1 zijn.';
+    if (field === 'year' && value !== '' && (parseInt(value, 10) < 1900 || parseInt(value, 10) > currentYear + 1)) {
+      message = 'Jaar ligt buiten het geldige bereik.';
+    }
+    if (field === 'releaseYear' && value !== '' && (parseInt(value, 10) < 1900 || parseInt(value, 10) > currentYear + 1)) {
+      message = 'Uitgavejaar ligt buiten het geldige bereik.';
+    }
+    setErrors((prev) => ({ ...prev, [field]: message }));
+    return !message;
+  }
 
   const [coverFile, setCoverFile] = useState(null);
   const [coverImageUrl, setCoverImageUrl] = useState(initialData.coverImageUrl || null);
@@ -357,25 +387,17 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
   function handleSubmit(e) {
     e.preventDefault();
     if (submitInFlightRef.current) return;
-    if (!artist.trim() || !title.trim()) {
-      showToast('Artiest en albumtitel zijn verplicht.', 'error');
-      return;
-    }
-    if (price !== '' && parseFloat(price) < 0) {
-      showToast('Aankoopprijs kan niet negatief zijn.', 'error');
-      return;
-    }
-    if (quantity !== '' && parseInt(quantity, 10) < 1) {
-      showToast('Aantal moet minstens 1 zijn.', 'error');
-      return;
-    }
-    const currentYear = new Date().getFullYear();
-    if (year !== '' && (parseInt(year, 10) < 1900 || parseInt(year, 10) > currentYear + 1)) {
-      showToast('Jaar (origineel) ligt buiten het geldige bereik.', 'error');
-      return;
-    }
-    if (releaseYear !== '' && (parseInt(releaseYear, 10) < 1900 || parseInt(releaseYear, 10) > currentYear + 1)) {
-      showToast('Uitgavejaar ligt buiten het geldige bereik.', 'error');
+    const validations = [
+      ['artist', artist],
+      ['title', title],
+      ['price', price],
+      ['quantity', quantity],
+      ['year', year],
+      ['releaseYear', releaseYear],
+    ];
+    const results = validations.map(([field, value]) => validateField(field, value));
+    if (results.some((ok) => !ok)) {
+      showToast('Controleer de gemarkeerde velden.', 'error');
       return;
     }
     const data = buildData();
@@ -465,18 +487,22 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
       <div style={sectionWrapStyle}>
         <h3 style={sectionHeaderStyle}>Basisinfo</h3>
         <div style={fieldGridStyle}>
-          <Field label="Artiest *">
+          <Field label="Artiest *" error={errors.artist}>
             <Input
               value={artist}
               onChange={(e) => setArtist(e.target.value)}
+              onBlur={(e) => validateField('artist', e.target.value)}
+              error={errors.artist}
               required
               placeholder="bijv. The Beatles"
             />
           </Field>
-          <Field label="Albumtitel *">
+          <Field label="Albumtitel *" error={errors.title}>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onBlur={(e) => validateField('title', e.target.value)}
+              error={errors.title}
               required
               placeholder="bijv. Abbey Road"
             />
@@ -491,21 +517,25 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               ))}
             </Select>
           </Field>
-          <Field label="Aankoopprijs (€)">
+          <Field label="Aankoopprijs (€)" error={errors.price}>
             <Input
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
+              onBlur={(e) => validateField('price', e.target.value)}
+              error={errors.price}
               min="0"
               step="0.01"
               placeholder="0.00"
             />
           </Field>
-          <Field label="Aantal">
+          <Field label="Aantal" error={errors.quantity}>
             <Input
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
+              onBlur={(e) => validateField('quantity', e.target.value)}
+              error={errors.quantity}
               min="1"
               placeholder="1"
             />
@@ -531,21 +561,25 @@ export default function RecordForm({ initialData = {}, onSubmit, onCancel, loadi
               placeholder="bijv. Apple Records"
             />
           </Field>
-          <Field label="Jaar (origineel)">
+          <Field label="Jaar (origineel)" error={errors.year}>
             <Input
               type="number"
               value={year}
               onChange={(e) => setYear(e.target.value)}
+              onBlur={(e) => validateField('year', e.target.value)}
+              error={errors.year}
               min="1900"
               max="2099"
               placeholder="bijv. 1969"
             />
           </Field>
-          <Field label="Uitgavejaar (deze persing)">
+          <Field label="Uitgavejaar (deze persing)" error={errors.releaseYear}>
             <Input
               type="number"
               value={releaseYear}
               onChange={(e) => setReleaseYear(e.target.value)}
+              onBlur={(e) => validateField('releaseYear', e.target.value)}
+              error={errors.releaseYear}
               min="1900"
               max="2099"
               placeholder="bijv. 2015 (heruitgave)"

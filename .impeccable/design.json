@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-24T00:00:00Z",
+  "title": "Design System: VinylVault",
+  "extensions": {
+    "colorMeta": {
+      "brand": { "role": "primary", "displayName": "Brass Amber", "canonical": "#d9a05b", "tonalRamp": ["#1f160c", "#3a2a14", "#5a401d", "#7d5827", "#a37536", "#c08e49", "#d9a05b", "#ecc18f"] },
+      "brand-strong": { "role": "primary", "displayName": "Brass Strong", "canonical": "#e7b06a", "tonalRamp": ["#241a0e", "#432f16", "#69481f", "#92652a", "#bb8338", "#d59c52", "#e7b06a", "#f3cd9c"] },
+      "brand-text": { "role": "primary", "displayName": "Brass Text", "canonical": "#1a1512", "tonalRamp": ["#0a0807", "#120f0c", "#1a1512", "#241d18", "#332821", "#473830", "#5d4a3f", "#76604f"] },
+      "accent-red": { "role": "secondary", "displayName": "Terracotta", "canonical": "#cf6a4c", "tonalRamp": ["#241008", "#421d10", "#642c18", "#8c3f22", "#b1542e", "#cf6a4c", "#dd8a6f", "#ecb19c"] },
+      "accent-blue": { "role": "secondary", "displayName": "Dusty Teal", "canonical": "#6f8f9c", "tonalRamp": ["#10181a", "#1e2c30", "#2f4348", "#446067", "#577984", "#6f8f9c", "#93acb6", "#bdd0d6"] },
+      "accent-green": { "role": "secondary", "displayName": "Olive Sage", "canonical": "#8aa46a", "tonalRamp": ["#161c10", "#28331c", "#3d4e29", "#566e38", "#6f8b49", "#8aa46a", "#aac08e", "#ccdbb6"] },
+      "bg-primary": { "role": "neutral", "displayName": "Charcoal Black", "canonical": "#141110", "tonalRamp": ["#000000", "#0a0807", "#141110", "#211c19", "#322b26", "#473e36", "#5e5249", "#776a5e"] },
+      "bg-card": { "role": "neutral", "displayName": "Warm Charcoal", "canonical": "#1c1815", "tonalRamp": ["#070605", "#100d0b", "#1c1815", "#2a241f", "#3c332b", "#52453a", "#6a5a4c", "#85725f"] },
+      "bg-hover": { "role": "neutral", "displayName": "Hover Charcoal", "canonical": "#262019", "tonalRamp": ["#0d0a07", "#181310", "#262019", "#352c22", "#493d31", "#605041", "#796653", "#947f68"] },
+      "text-primary": { "role": "neutral", "displayName": "Warm Cream", "canonical": "#f2ebdd", "tonalRamp": ["#332d22", "#544a39", "#796c54", "#9c8d70", "#bcae8e", "#d8cdb2", "#f2ebdd", "#fbf8f1"] },
+      "text-secondary": { "role": "neutral", "displayName": "Taupe", "canonical": "#a89a85", "tonalRamp": ["#1c1712", "#332a20", "#4d4030", "#695841", "#867255", "#a89a85", "#c4b9a8", "#e1dace"] },
+      "border-color": { "role": "neutral", "displayName": "Hairline Border", "canonical": "#312a22", "tonalRamp": ["#0c0a08", "#171310", "#312a22", "#473d32", "#605143", "#7a6857", "#96826e", "#b4a18b"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Fraunces Display", "purpose": "Page headings and large KPI numeric values only." },
+      "body": { "displayName": "Hanken Grotesk Body", "purpose": "All dense UI text, body copy, buttons, form fields." },
+      "label": { "displayName": "Uppercase Label", "purpose": "Small caption text above KPI values and metadata tags." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 2px rgba(0,0,0,0.4)", "purpose": "Default resting shadow on cards; barely visible, grounding." },
+      { "name": "raised", "value": "0 6px 22px rgba(0,0,0,0.45)", "purpose": "Floating surfaces: toasts, modals." },
+      { "name": "glow", "value": "0 10px 30px rgba(217,160,91,0.18)", "purpose": "Brass glow under primary buttons; the one place shadow carries brand color." }
+    ],
+    "motion": [
+      { "name": "ease-entrance", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Fade-up entrance animation for content reveals, staggered across list/grid children." },
+      { "name": "duration-state", "value": "0.18s", "purpose": "Default transition duration for hover/focus state changes (background, border, box-shadow)." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "767px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call-to-action button, brass background with glow shadow.",
+      "html": "<button class=\"ds-btn-primary\">Save record</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 9px 17px; border-radius: 10px; font-size: 14px; font-weight: 600; border: 1px solid transparent; cursor: pointer; background: #d9a05b; color: #1a1512; box-shadow: 0 10px 30px rgba(217,160,91,0.18); transition: transform 0.12s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; } .ds-btn-primary:hover { background: #e7b06a; } .ds-btn-primary:focus-visible { outline: 2px solid #d9a05b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action button, card background with hairline border.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 7px; padding: 9px 17px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; background: #1c1815; color: #f2ebdd; border: 1px solid #312a22; transition: border-color 0.18s ease, background-color 0.18s ease; } .ds-btn-secondary:hover { border-color: #d9a05b; } .ds-btn-secondary:focus-visible { outline: 2px solid #d9a05b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip-active",
+      "description": "Toggleable filter chip, active and inactive states.",
+      "html": "<button class=\"ds-chip ds-chip--active\">Active</button> <button class=\"ds-chip\">Inactive</button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 5px 13px; border-radius: 999px; font-size: 13px; font-weight: 500; background: transparent; color: #a89a85; border: 1px solid #312a22; cursor: pointer; transition: all 0.18s ease; } .ds-chip--active { font-weight: 600; background: rgba(217,160,91,0.14); color: #e7b06a; border-color: #d9a05b; } .ds-chip:focus-visible { outline: 2px solid #d9a05b; outline-offset: 2px; }"
+    },
+    {
+      "name": "KPI Tile",
+      "kind": "card",
+      "refersTo": "card-kpi",
+      "description": "Clickable KPI tile with serif numeral, lifts and glows brass border on hover.",
+      "html": "<div class=\"ds-kpi\" tabindex=\"0\"><div class=\"ds-kpi__label\">Records</div><div class=\"ds-kpi__value\">428</div></div>",
+      "css": ".ds-kpi { background: #1c1815; border: 1px solid #312a22; border-radius: 10px; padding: 15px 20px; min-width: 80px; flex: 1 1 0; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.4); transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease; } .ds-kpi:hover { background: #262019; border-color: #d9a05b; transform: translateY(-2px); } .ds-kpi__label { font-size: 11px; color: #a89a85; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; } .ds-kpi__value { font-family: Fraunces, Georgia, serif; font-size: clamp(20px, 5vw, 32px); font-weight: 600; color: #f2ebdd; line-height: 1.05; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Auto-dismissing notification with accent-colored border and dot, raised shadow.",
+      "html": "<div class=\"ds-toast\" role=\"alert\"><span class=\"ds-toast__dot\"></span><span>Record saved</span></div>",
+      "css": ".ds-toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; background: #1c1815; border: 1px solid #8aa46a; color: #f2ebdd; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); min-width: 260px; max-width: 380px; } .ds-toast__dot { width: 8px; height: 8px; border-radius: 50%; background: #8aa46a; flex-shrink: 0; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Status/category pill with dimmed accent background.",
+      "html": "<span class=\"ds-badge\">Sealed</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; background: rgba(217,160,91,0.16); color: #d9a05b; border: 1px solid #d9a05b33; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Warm Hi-Fi",
+    "overview": "VinylVault is built for a small group of personal collectors logging and browsing their own vinyl, not for an anonymous SaaS audience. The system reads like an amber-lit listening room at night: a near-black charcoal base, warm brass/amber as the one dominant accent, terracotta and olive and dusty teal as quiet supporting colors, and a faint film-grain texture across every screen that signals analog media rather than a flat productivity tool. Typography pairs a serif display face for warmth and character with a clean grotesque for body text, so headings feel personal and curated while data stays legible. This system explicitly rejects the generic SaaS dashboard: no gray flat cards, no gradient hero-metric tiles, no sterile enterprise-admin chrome. Depth and warmth come from tone, texture, and a single confident accent color, not from decoration.",
+    "keyCharacteristics": [
+      "Dark, warm-neutral base (#141110) with brass/amber (#d9a05b) as the sole dominant accent",
+      "Subtle film-grain texture and soft radial glows for analog depth, never decorative gradients",
+      "Fraunces serif for display, Hanken Grotesk for body and UI text",
+      "Flat cards with hairline borders at rest; glow and lift only on hover/emphasis",
+      "Stable owner-color hashing (red/blue/teal/olive) so each collector's records are recognizable at a glance without hardcoded names"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Brass amber is the only color allowed to dominate a screen. Terracotta, teal, and olive exist only as small, purposeful signals — never as a competing primary.", "section": "colors" },
+      { "name": "The Dim-Tint Rule", "body": "When an accent needs a background instead of just a foreground, use that accent at low opacity (rgba(..., 0.14-0.16)) over the dark base rather than a flat saturated fill.", "section": "colors" },
+      { "name": "The Serif-for-Numbers Rule", "body": "Display/serif typography is reserved for headings and large numeric values in KPI tiles. Body copy, buttons, and form fields stay in Hanken Grotesk.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest, distinguished by tone, not shadow. Shadow is reserved for hover lift, the primary-button glow, and genuinely floating elements.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep brass amber (#d9a05b) as the only color allowed to dominate a screen.",
+      "Do use tone steps (bg-primary -> bg-card -> bg-hover) to convey depth before reaching for shadow.",
+      "Do pair Fraunces only with headings and large numeric values; keep dense UI text in Hanken Grotesk.",
+      "Do use the dimmed-accent-background pattern (rgba(accent, 0.14-0.16)) for badges and active filter chips instead of flat saturated fills.",
+      "Do keep the deterministic owner-color hash for any new per-person UI; never hardcode a person's color."
+    ],
+    "donts": [
+      "Don't introduce gray flat cards or sterile enterprise-admin styling; this is the explicit anti-reference from PRODUCT.md.",
+      "Don't use gradient hero-metric tiles or gradient text for KPI values; the serif numeral plus flat brass tint already carries emphasis.",
+      "Don't add ambient shadows to every card 'for depth'; depth comes from background tone, shadow is reserved for hover/floating states.",
+      "Don't introduce a second saturated accent competing with brass amber for visual weight.",
+      "Don't strip the film-grain texture or warm radial glow from the page background; it's the load-bearing detail that keeps the dark theme from feeling like generic SaaS dark mode."
+    ]
+  }
+}

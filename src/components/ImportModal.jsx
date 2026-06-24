@@ -660,10 +660,12 @@ function StepImporting({ sanitizedRows, skipErrors, existingMode, existingByKey,
 
   const progressBarFillStyle = {
     height: '100%',
-    width: progressPct + '%',
+    width: '100%',
     backgroundColor: colors.accentRed,
     borderRadius: radius.sm,
-    transition: 'width 0.3s ease',
+    transform: `scaleX(${progressPct / 100})`,
+    transformOrigin: 'left',
+    transition: 'transform 0.3s ease',
   };
 
   return (

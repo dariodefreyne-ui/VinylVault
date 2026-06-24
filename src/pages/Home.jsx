@@ -7,7 +7,7 @@ import { isOwnRecord } from '../utils/owners.js';
 import KpiTegel from '../components/ui/KpiTegel.jsx';
 import RecordCard from '../components/records/RecordCard.jsx';
 import Icon from '../components/ui/Icon.jsx';
-import { colors, radius, buttonStyle } from '../styles/tokens.js';
+import { colors, radius, buttonStyle, fonts } from '../styles/tokens.js';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ export default function Home() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [showAll, setShowAll] = useState(false);
   const searchRef = useRef(null);
 
@@ -72,18 +73,41 @@ export default function Home() {
       .map(([artist]) => artist);
   })();
 
+  const showSuggestions =
+    searchFocused && searchQuery === '' && artistSuggestions.length > 0;
+
   function handleSearchKeyDown(e) {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate('/platen?search=' + encodeURIComponent(searchQuery.trim()));
+    if (showSuggestions && e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestionIndex((i) => (i + 1) % artistSuggestions.length);
+      return;
+    }
+    if (showSuggestions && e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestionIndex((i) => (i <= 0 ? artistSuggestions.length - 1 : i - 1));
+      return;
+    }
+    if (e.key === 'Escape') {
+      setActiveSuggestionIndex(-1);
+      setSearchFocused(false);
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (showSuggestions && activeSuggestionIndex >= 0) {
+        e.preventDefault();
+        handleSuggestionClick(artistSuggestions[activeSuggestionIndex]);
+        return;
+      }
+      if (searchQuery.trim()) {
+        navigate('/platen?search=' + encodeURIComponent(searchQuery.trim()));
+      }
     }
   }
 
   function handleSuggestionClick(artist) {
+    setActiveSuggestionIndex(-1);
     navigate('/platen?search=' + encodeURIComponent(artist));
   }
-
-  const showSuggestions =
-    searchFocused && searchQuery === '' && artistSuggestions.length > 0;
 
   // --- Styles ---
 
@@ -93,8 +117,10 @@ export default function Home() {
   };
 
   const headingStyle = {
+    fontFamily: fonts.display,
     fontSize: '28px',
-    fontWeight: 700,
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
     color: colors.textPrimary,
     margin: '0 0 4px 0',
   };
@@ -218,8 +244,21 @@ export default function Home() {
               style={searchInputStyle}
               type="text"
               placeholder="Zoek op artiest of titel..."
+              aria-label="Zoek op artiest of titel"
+              role="combobox"
+              aria-expanded={showSuggestions}
+              aria-controls="home-search-suggestions"
+              aria-activedescendant={
+                showSuggestions && activeSuggestionIndex >= 0
+                  ? `home-suggestion-${activeSuggestionIndex}`
+                  : undefined
+              }
+              autoComplete="off"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setActiveSuggestionIndex(-1);
+              }}
               onKeyDown={handleSearchKeyDown}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
@@ -227,12 +266,14 @@ export default function Home() {
           </div>
 
           {showSuggestions && (
-            <div style={dropdownStyle}>
-              {artistSuggestions.map((artist) => (
+            <div id="home-search-suggestions" role="listbox" style={dropdownStyle}>
+              {artistSuggestions.map((artist, index) => (
                 <SuggestionItem
                   key={artist}
+                  id={`home-suggestion-${index}`}
                   label={artist}
                   baseStyle={suggestionItemStyle}
+                  active={index === activeSuggestionIndex}
                   onClick={() => handleSuggestionClick(artist)}
                 />
               ))}
@@ -286,13 +327,16 @@ export default function Home() {
   );
 }
 
-function SuggestionItem({ label, baseStyle, onClick }) {
+function SuggestionItem({ id, label, baseStyle, active, onClick }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
+      id={id}
+      role="option"
+      aria-selected={active}
       style={{
         ...baseStyle,
-        backgroundColor: hovered ? colors.bgHover : 'transparent',
+        backgroundColor: active || hovered ? colors.bgHover : 'transparent',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

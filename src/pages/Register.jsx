@@ -36,9 +36,7 @@ export default function Register() {
       console.error('Register error:', err.code, err.message);
       const msg = err.code === 'auth/email-already-in-use'
         ? 'Dit e-mailadres is al in gebruik. Probeer in te loggen of gebruik wachtwoord vergeten.'
-        : err.code === 'permission-denied'
-        ? 'Database-regels niet gepubliceerd. Ga naar Firebase Console → Firestore → Rules en klik Publish.'
-        : `Registratie mislukt (${err.code || 'onbekend'}): ${err.message}`;
+        : 'Registratie is mislukt. Probeer het opnieuw of neem contact op met een beheerder.';
       showToast(msg, 'error');
     } finally {
       inFlight.current = false;
