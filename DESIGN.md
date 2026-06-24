@@ -186,6 +186,7 @@ Each collector's display name is hashed deterministically to one of four accent 
 
 ### Don't:
 - **Don't** introduce gray flat cards or sterile enterprise-admin styling; this is the explicit anti-reference from PRODUCT.md.
+- **Don't** turn record lists into dense spreadsheet-only tables with no warmth or visual character; another explicit anti-reference from PRODUCT.md.
 - **Don't** use gradient hero-metric tiles or gradient text for KPI values; the serif numeral plus flat brass tint already carries emphasis.
 - **Don't** add ambient shadows to every card "for depth"; depth comes from background tone, shadow is reserved for hover/floating states.
 - **Don't** introduce a second saturated accent competing with brass amber for visual weight.

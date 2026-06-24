@@ -18,7 +18,8 @@ Warm, tactile, collector-grade. Should feel like flipping through a well-kept re
 
 ## Anti-references
 
-Generic SaaS dashboard: gray flat cards, gradient hero-metric tiles, cookie-cutter stat widgets, sterile enterprise-admin aesthetics. The app should not look like a generic CRUD admin panel.
+- Generic SaaS dashboard: gray flat cards, gradient hero-metric tiles, cookie-cutter stat widgets, sterile enterprise-admin aesthetics. The app should not look like a generic CRUD admin panel.
+- Cluttered spreadsheet app: dense data-table-only UI with no warmth or visual character. Records are physical, tactile objects, not spreadsheet rows.
 
 ## Design Principles
 
